@@ -87,8 +87,8 @@
 #define SMALL_STR_MAX 100
 #define TINY_STR_MAX  10
 
-#define MAX_MAN_PATHS 100	/* Max number of directories */
-#define MAX_ZCATS     10	/* Max number of zcat style programs */
+#define MAX_MAN_PATHS 100 /* Max number of directories */
+#define MAX_ZCATS     10  /* Max number of zcat style programs */
 #define MAX_WORDLIST  100
 
 #ifndef EXIT_SUCCESS
@@ -103,11 +103,11 @@
 
 static char location_base[NULL_TERMINATED(MED_STR_MAX)] = "";
 
-static char th_page_and_sec[128] = { '\0' };
-static char th_datestr[128] = { '\0' };
-static char th_version[128] = { '\0' };
+static char th_page_and_sec[128] = {'\0'};
+static char th_datestr[128] = {'\0'};
+static char th_version[128] = {'\0'};
 
-char   *signature = "<HR>\nThis document was created by man2html from %s.<BR>\nTime: %s\n";
+char *signature = "<HR>\nThis document was created by man2html from %s.<BR>\nTime: %s\n";
 
 /* timeformat for signature */
 #define TIMEFORMAT "%d %B %Y %T %Z"
@@ -120,34 +120,30 @@ char *manpage;
 #define BL_ENUM_LIST   4
 
 /* BSD mandoc Bd/Ed example(?) blocks */
-#define BD_LITERAL  1
-#define BD_INDENT   2
+#define BD_LITERAL 1
+#define BD_INDENT  2
 
 #ifndef HAVE_STRERROR
-static char *
-strerror(int e)
-{
+static char *strerror(int e) {
 	static char emsg[40];
 
-#if defined (HAVE_SYS_ERRLIST)
+#if defined(HAVE_SYS_ERRLIST)
 	extern int sys_nerr;
 	extern char *sys_errlist[];
 
 	if (e > 0 && e < sys_nerr)
 		return (sys_errlist[e]);
 	else
-#endif				/* HAVE_SYS_ERRLIST */
+#endif /* HAVE_SYS_ERRLIST */
 	{
 		sprintf(emsg, "Unknown system error %d", e);
 		return (&emsg[0]);
 	}
 }
-#endif				/* !HAVE_STRERROR */
+#endif /* !HAVE_STRERROR */
 
-static char *
-strgrow(char *old, int len)
-{
-	char   *new = realloc(old, (strlen(old) + len + 1) * sizeof(char));
+static char *strgrow(char *old, int len) {
+	char *new = realloc(old, (strlen(old) + len + 1) * sizeof(char));
 
 	if (!new) {
 		fprintf(stderr, "man2html: out of memory");
@@ -156,11 +152,9 @@ strgrow(char *old, int len)
 	return new;
 }
 
-static char *
-stralloc(int len)
-{
+static char *stralloc(int len) {
 	/* allocate enough for len + NULL */
-	char   *new = malloc((len + 1) * sizeof(char));
+	char *new = malloc((len + 1) * sizeof(char));
 
 	if (!new) {
 		fprintf(stderr, "man2html: out of memory");
@@ -169,12 +163,10 @@ stralloc(int len)
 	return new;
 }
 
-void *
-xmalloc (size_t size)
-{
+void *xmalloc(size_t size) {
 	void *ret;
 
-	ret = malloc (size);
+	ret = malloc(size);
 	if (ret == 0) {
 		fprintf(stderr, "man2html: out of memory");
 		exit(EXIT_FAILURE);
@@ -186,34 +178,28 @@ xmalloc (size_t size)
  * Some systems don't have strdup so lets use our own - which can also
  * check for out of memory.
  */
-static char *
-strduplicate(char *from)
-{
-	char   *new = stralloc(strlen(from));
+static char *strduplicate(char *from) {
+	char *new = stralloc(strlen(from));
 
 	strcpy(new, from);
 	return new;
 }
 
 /* Assumes space for n plus a null */
-static char *
-strmaxcpy(char *to, char *from, int n)
-{
-	int     len = strlen(from);
+static char *strmaxcpy(char *to, char *from, int n) {
+	int len = strlen(from);
 
 	strncpy(to, from, n);
 	to[(len <= n) ? len : n] = '\0';
 	return to;
 }
 
-static char *
-strmaxcat(char *to, char *from, int n)
-{
-	int     to_len = strlen(to);
+static char *strmaxcat(char *to, char *from, int n) {
+	int to_len = strlen(to);
 
 	if (to_len < n) {
-		int     from_len = strlen(from);
-		int     cp = (to_len + from_len <= n) ? from_len : n - to_len;
+		int from_len = strlen(from);
+		int cp = (to_len + from_len <= n) ? from_len : n - to_len;
 
 		strncpy(to + to_len, from, cp);
 		to[to_len + cp] = '\0';
@@ -222,10 +208,8 @@ strmaxcat(char *to, char *from, int n)
 }
 
 /* Assumes space for limit plus a null */
-static char *
-strlimitcpy(char *to, char *from, int n, int limit)
-{
-	int     len = n > limit ? limit : n;
+static char *strlimitcpy(char *to, char *from, int n, int limit) {
+	int len = n > limit ? limit : n;
 
 	strmaxcpy(to, from, len);
 	to[len] = '\0';
@@ -236,21 +220,16 @@ strlimitcpy(char *to, char *from, int n, int limit)
  * takes string and escapes all metacharacters.  should be used before
  * including string in system() or similar call.
  */
-static char *
-escape_input(char *str)
-{
-	int     i, j = 0;
+static char *escape_input(char *str) {
+	int i, j = 0;
 	static char new[NULL_TERMINATED(MED_STR_MAX)];
 
 	if (strlen(str) * 2 + 1 > MED_STR_MAX) {
-		fprintf(stderr,
-			"man2html: escape_input - str too long:\n%-80s...\n",
-			str);
+		fprintf(stderr, "man2html: escape_input - str too long:\n%-80s...\n", str);
 		exit(EXIT_FAILURE);
 	}
 	for (i = 0; i < strlen(str); i++) {
-		if (!(((str[i] >= 'A') && (str[i] <= 'Z')) ||
-		      ((str[i] >= 'a') && (str[i] <= 'z')) ||
+		if (!(((str[i] >= 'A') && (str[i] <= 'Z')) || ((str[i] >= 'a') && (str[i] <= 'z')) ||
 		      ((str[i] >= '0') && (str[i] <= '9')))) {
 			new[j] = '\\';
 			j++;
@@ -262,13 +241,9 @@ escape_input(char *str)
 	return new;
 }
 
-static void
-usage(void)
-{
+static void usage(void) {
 	fprintf(stderr, "man2html: usage: man2html filename\n");
 }
-
-
 
 /*
  * below this you should not change anything unless you know a lot
@@ -277,16 +252,16 @@ usage(void)
 
 typedef struct STRDEF STRDEF;
 struct STRDEF {
-	int     nr, slen;
-	char   *st;
+	int nr, slen;
+	char *st;
 	STRDEF *next;
 };
 
 typedef struct INTDEF INTDEF;
 struct INTDEF {
-	int     nr;
-	int     val;
-	int     incr;
+	int nr;
+	int val;
+	int incr;
 	INTDEF *next;
 };
 
@@ -301,129 +276,122 @@ static FILE *idxfile;
 static STRDEF *chardef, *strdef, *defdef;
 static INTDEF *intdef;
 
-#define V(A,B) ((A)*256+(B))
+#define V(A, B) ((A)*256 + (B))
 
-static INTDEF standardint[] = {
-	{V('n', ' '), NROFF, 0, NULL},
-	{V('t', ' '), 1 - NROFF, 0, NULL},
-	{V('o', ' '), 1, 0, NULL},
-	{V('e', ' '), 0, 0, NULL},
-	{V('.', 'l'), 70, 0, NULL},
-	{V('.', '$'), 0, 0, NULL},
-	{V('.', 'A'), NROFF, 0, NULL},
-	{V('.', 'T'), 1 - NROFF, 0, NULL},
-	{V('.', 'V'), 1, 0, NULL},	/* the me package tests for this */
-{0, 0, 0, NULL}};
+static INTDEF standardint[] = {{V('n', ' '), NROFF, 0, NULL},
+                               {V('t', ' '), 1 - NROFF, 0, NULL},
+                               {V('o', ' '), 1, 0, NULL},
+                               {V('e', ' '), 0, 0, NULL},
+                               {V('.', 'l'), 70, 0, NULL},
+                               {V('.', '$'), 0, 0, NULL},
+                               {V('.', 'A'), NROFF, 0, NULL},
+                               {V('.', 'T'), 1 - NROFF, 0, NULL},
+                               {V('.', 'V'), 1, 0, NULL}, /* the me package tests for this */
+                               {0, 0, 0, NULL}};
 
-static STRDEF standardstring[] = {
-	{V('R', ' '), 1, "&#174;", NULL},
-	{V('l', 'q'), 2, "``", NULL},
-	{V('r', 'q'), 2, "''", NULL},
-	{0, 0, NULL, NULL}
-};
+static STRDEF standardstring[] = {{V('R', ' '), 1, "&#174;", NULL},
+                                  {V('l', 'q'), 2, "``", NULL},
+                                  {V('r', 'q'), 2, "''", NULL},
+                                  {0, 0, NULL, NULL}};
 
-
-static STRDEF standardchar[] = {
-	{V('*', '*'), 1, "*", NULL},
-	{V('*', 'A'), 1, "A", NULL},
-	{V('*', 'B'), 1, "B", NULL},
-	{V('*', 'C'), 2, "Xi", NULL},
-	{V('*', 'D'), 5, "Delta", NULL},
-	{V('*', 'E'), 1, "E", NULL},
-	{V('*', 'F'), 3, "Phi", NULL},
-	{V('*', 'G'), 5, "Gamma", NULL},
-	{V('*', 'H'), 5, "Theta", NULL},
-	{V('*', 'I'), 1, "I", NULL},
-	{V('*', 'K'), 1, "K", NULL},
-	{V('*', 'L'), 6, "Lambda", NULL},
-	{V('*', 'M'), 1, "M", NULL},
-	{V('*', 'N'), 1, "N", NULL},
-	{V('*', 'O'), 1, "O", NULL},
-	{V('*', 'P'), 2, "Pi", NULL},
-	{V('*', 'Q'), 3, "Psi", NULL},
-	{V('*', 'R'), 1, "P", NULL},
-	{V('*', 'S'), 5, "Sigma", NULL},
-	{V('*', 'T'), 1, "T", NULL},
-	{V('*', 'U'), 1, "Y", NULL},
-	{V('*', 'W'), 5, "Omega", NULL},
-	{V('*', 'X'), 1, "X", NULL},
-	{V('*', 'Y'), 1, "H", NULL},
-	{V('*', 'Z'), 1, "Z", NULL},
-	{V('*', 'a'), 5, "alpha", NULL},
-	{V('*', 'b'), 4, "beta", NULL},
-	{V('*', 'c'), 2, "xi", NULL},
-	{V('*', 'd'), 5, "delta", NULL},
-	{V('*', 'e'), 7, "epsilon", NULL},
-	{V('*', 'f'), 3, "phi", NULL},
-	{V('*', 'g'), 5, "gamma", NULL},
-	{V('*', 'h'), 5, "theta", NULL},
-	{V('*', 'i'), 4, "iota", NULL},
-	{V('*', 'k'), 5, "kappa", NULL},
-	{V('*', 'l'), 6, "lambda", NULL},
-	{V('*', 'm'), 1, "&#181;", NULL},
-	{V('*', 'n'), 2, "nu", NULL},
-	{V('*', 'o'), 1, "o", NULL},
-	{V('*', 'p'), 2, "pi", NULL},
-	{V('*', 'q'), 3, "psi", NULL},
-	{V('*', 'r'), 3, "rho", NULL},
-	{V('*', 's'), 5, "sigma", NULL},
-	{V('*', 't'), 3, "tau", NULL},
-	{V('*', 'u'), 7, "upsilon", NULL},
-	{V('*', 'w'), 5, "omega", NULL},
-	{V('*', 'x'), 3, "chi", NULL},
-	{V('*', 'y'), 3, "eta", NULL},
-	{V('*', 'z'), 4, "zeta", NULL},
-	{V('t', 's'), 5, "sigma", NULL},
-	{V('+', '-'), 1, "&#177;", NULL},
-	{V('1', '2'), 1, "&#189;", NULL},
-	{V('1', '4'), 1, "&#188;", NULL},
-	{V('3', '4'), 1, "&#190;", NULL},
-	{V('F', 'i'), 3, "ffi", NULL},
-	{V('F', 'l'), 3, "ffl", NULL},
-	{V('a', 'a'), 1, "&#180;", NULL},
-	{V('a', 'p'), 1, "~", NULL},
-	{V('b', 'r'), 1, "|", NULL},
-	{V('b', 'u'), 1, "*", NULL},
-	{V('b', 'v'), 1, "|", NULL},
-	{V('c', 'i'), 1, "o", NULL},
-	{V('c', 'o'), 1, "&#169;", NULL},
-	{V('c', 't'), 1, "&#162;", NULL},
-	{V('d', 'e'), 1, "&#176;", NULL},
-	{V('d', 'g'), 1, "+", NULL},
-	{V('d', 'i'), 1, "&#247;", NULL},
-	{V('e', 'm'), 1, "-", NULL},
-	{V('e', 'm'), 3, "---", NULL},
-	{V('e', 'q'), 1, "=", NULL},
-	{V('e', 's'), 1, "&#216;", NULL},
-	{V('f', 'f'), 2, "ff", NULL},
-	{V('f', 'i'), 2, "fi", NULL},
-	{V('f', 'l'), 2, "fl", NULL},
-	{V('f', 'm'), 1, "&#180;", NULL},
-	{V('g', 'a'), 1, "`", NULL},
-	{V('h', 'y'), 1, "-", NULL},
-	{V('l', 'c'), 2, "|&#175;", NULL},
-	{V('l', 'f'), 2, "|_", NULL},
-	{V('l', 'k'), 1, "<FONT SIZE=+2>{</FONT>", NULL},
-	{V('m', 'i'), 1, "-", NULL},
-	{V('m', 'u'), 1, "&#215;", NULL},
-	{V('n', 'o'), 1, "&#172;", NULL},
-	{V('o', 'r'), 1, "|", NULL},
-	{V('p', 'l'), 1, "+", NULL},
-	{V('r', 'c'), 2, "&#175;|", NULL},
-	{V('r', 'f'), 2, "_|", NULL},
-	{V('r', 'g'), 1, "&#174;", NULL},
-	{V('r', 'k'), 1, "<FONT SIZE=+2>}</FONT>", NULL},
-	{V('r', 'n'), 1, "&#175;", NULL},
-	{V('r', 'u'), 1, "_", NULL},
-	{V('s', 'c'), 1, "&#167;", NULL},
-	{V('s', 'l'), 1, "/", NULL},
-	{V('s', 'q'), 2, "[]", NULL},
-	{V('u', 'l'), 1, "_", NULL},
-	{0, 0, NULL, NULL}
-};
+static STRDEF standardchar[] = {{V('*', '*'), 1, "*", NULL},
+                                {V('*', 'A'), 1, "A", NULL},
+                                {V('*', 'B'), 1, "B", NULL},
+                                {V('*', 'C'), 2, "Xi", NULL},
+                                {V('*', 'D'), 5, "Delta", NULL},
+                                {V('*', 'E'), 1, "E", NULL},
+                                {V('*', 'F'), 3, "Phi", NULL},
+                                {V('*', 'G'), 5, "Gamma", NULL},
+                                {V('*', 'H'), 5, "Theta", NULL},
+                                {V('*', 'I'), 1, "I", NULL},
+                                {V('*', 'K'), 1, "K", NULL},
+                                {V('*', 'L'), 6, "Lambda", NULL},
+                                {V('*', 'M'), 1, "M", NULL},
+                                {V('*', 'N'), 1, "N", NULL},
+                                {V('*', 'O'), 1, "O", NULL},
+                                {V('*', 'P'), 2, "Pi", NULL},
+                                {V('*', 'Q'), 3, "Psi", NULL},
+                                {V('*', 'R'), 1, "P", NULL},
+                                {V('*', 'S'), 5, "Sigma", NULL},
+                                {V('*', 'T'), 1, "T", NULL},
+                                {V('*', 'U'), 1, "Y", NULL},
+                                {V('*', 'W'), 5, "Omega", NULL},
+                                {V('*', 'X'), 1, "X", NULL},
+                                {V('*', 'Y'), 1, "H", NULL},
+                                {V('*', 'Z'), 1, "Z", NULL},
+                                {V('*', 'a'), 5, "alpha", NULL},
+                                {V('*', 'b'), 4, "beta", NULL},
+                                {V('*', 'c'), 2, "xi", NULL},
+                                {V('*', 'd'), 5, "delta", NULL},
+                                {V('*', 'e'), 7, "epsilon", NULL},
+                                {V('*', 'f'), 3, "phi", NULL},
+                                {V('*', 'g'), 5, "gamma", NULL},
+                                {V('*', 'h'), 5, "theta", NULL},
+                                {V('*', 'i'), 4, "iota", NULL},
+                                {V('*', 'k'), 5, "kappa", NULL},
+                                {V('*', 'l'), 6, "lambda", NULL},
+                                {V('*', 'm'), 1, "&#181;", NULL},
+                                {V('*', 'n'), 2, "nu", NULL},
+                                {V('*', 'o'), 1, "o", NULL},
+                                {V('*', 'p'), 2, "pi", NULL},
+                                {V('*', 'q'), 3, "psi", NULL},
+                                {V('*', 'r'), 3, "rho", NULL},
+                                {V('*', 's'), 5, "sigma", NULL},
+                                {V('*', 't'), 3, "tau", NULL},
+                                {V('*', 'u'), 7, "upsilon", NULL},
+                                {V('*', 'w'), 5, "omega", NULL},
+                                {V('*', 'x'), 3, "chi", NULL},
+                                {V('*', 'y'), 3, "eta", NULL},
+                                {V('*', 'z'), 4, "zeta", NULL},
+                                {V('t', 's'), 5, "sigma", NULL},
+                                {V('+', '-'), 1, "&#177;", NULL},
+                                {V('1', '2'), 1, "&#189;", NULL},
+                                {V('1', '4'), 1, "&#188;", NULL},
+                                {V('3', '4'), 1, "&#190;", NULL},
+                                {V('F', 'i'), 3, "ffi", NULL},
+                                {V('F', 'l'), 3, "ffl", NULL},
+                                {V('a', 'a'), 1, "&#180;", NULL},
+                                {V('a', 'p'), 1, "~", NULL},
+                                {V('b', 'r'), 1, "|", NULL},
+                                {V('b', 'u'), 1, "*", NULL},
+                                {V('b', 'v'), 1, "|", NULL},
+                                {V('c', 'i'), 1, "o", NULL},
+                                {V('c', 'o'), 1, "&#169;", NULL},
+                                {V('c', 't'), 1, "&#162;", NULL},
+                                {V('d', 'e'), 1, "&#176;", NULL},
+                                {V('d', 'g'), 1, "+", NULL},
+                                {V('d', 'i'), 1, "&#247;", NULL},
+                                {V('e', 'm'), 1, "-", NULL},
+                                {V('e', 'm'), 3, "---", NULL},
+                                {V('e', 'q'), 1, "=", NULL},
+                                {V('e', 's'), 1, "&#216;", NULL},
+                                {V('f', 'f'), 2, "ff", NULL},
+                                {V('f', 'i'), 2, "fi", NULL},
+                                {V('f', 'l'), 2, "fl", NULL},
+                                {V('f', 'm'), 1, "&#180;", NULL},
+                                {V('g', 'a'), 1, "`", NULL},
+                                {V('h', 'y'), 1, "-", NULL},
+                                {V('l', 'c'), 2, "|&#175;", NULL},
+                                {V('l', 'f'), 2, "|_", NULL},
+                                {V('l', 'k'), 1, "<FONT SIZE=+2>{</FONT>", NULL},
+                                {V('m', 'i'), 1, "-", NULL},
+                                {V('m', 'u'), 1, "&#215;", NULL},
+                                {V('n', 'o'), 1, "&#172;", NULL},
+                                {V('o', 'r'), 1, "|", NULL},
+                                {V('p', 'l'), 1, "+", NULL},
+                                {V('r', 'c'), 2, "&#175;|", NULL},
+                                {V('r', 'f'), 2, "_|", NULL},
+                                {V('r', 'g'), 1, "&#174;", NULL},
+                                {V('r', 'k'), 1, "<FONT SIZE=+2>}</FONT>", NULL},
+                                {V('r', 'n'), 1, "&#175;", NULL},
+                                {V('r', 'u'), 1, "_", NULL},
+                                {V('s', 'c'), 1, "&#167;", NULL},
+                                {V('s', 'l'), 1, "/", NULL},
+                                {V('s', 'q'), 2, "[]", NULL},
+                                {V('u', 'l'), 1, "_", NULL},
+                                {0, 0, NULL, NULL}};
 
 /* default: print code */
-
 
 static char eqndelimopen = 0, eqndelimclose = 0;
 static char escapesym = '\\', nobreaksym = '\'', controlsym = '.', fieldsym = 0, padsym = 0;
@@ -445,12 +413,10 @@ static char **argument = NULL;
 
 static char charb[TINY_STR_MAX];
 
-static void
-print_sig(void)
-{
-	char    datbuf[NULL_TERMINATED(MED_STR_MAX)];
+static void print_sig(void) {
+	char datbuf[NULL_TERMINATED(MED_STR_MAX)];
 	struct tm *timetm;
-	time_t  clock;
+	time_t clock;
 
 	datbuf[0] = '\0';
 	clock = time(NULL);
@@ -459,9 +425,7 @@ print_sig(void)
 	printf(signature, manpage, datbuf);
 }
 
-static char *
-expand_char(int nr)
-{
+static char *expand_char(int nr) {
 	STRDEF *h;
 
 	h = chardef;
@@ -476,7 +440,7 @@ expand_char(int nr)
 	charb[0] = nr / 256;
 	charb[1] = nr % 256;
 	charb[2] = '\0';
-	if (charb[0] == '<') {	/* Fix up <= */
+	if (charb[0] == '<') { /* Fix up <= */
 		charb[4] = charb[1];
 		strncpy(charb, "&lt;", 4);
 		charb[5] = '\0';
@@ -485,9 +449,7 @@ expand_char(int nr)
 	return charb;
 }
 
-static char *
-expand_string(int nr)
-{
+static char *expand_string(int nr) {
 	STRDEF *h = strdef;
 
 	if (!nr)
@@ -501,14 +463,12 @@ expand_string(int nr)
 	return NULL;
 }
 
-static char *
-read_man_page(char *filename)
-{
-	char   *man_buf = NULL;
-	int     i;
-	FILE   *man_stream = NULL;
+static char *read_man_page(char *filename) {
+	char *man_buf = NULL;
+	int i;
+	FILE *man_stream = NULL;
 	struct stat stbuf;
-	int     buf_size;
+	int buf_size;
 
 	if (stat(filename, &stbuf) == -1)
 		return NULL;
@@ -530,7 +490,6 @@ read_man_page(char *filename)
 	return man_buf;
 }
 
-
 static char outbuffer[NULL_TERMINATED(HUGE_STR_MAX)];
 static int obp = 0;
 static int no_newline_output = 0;
@@ -541,7 +500,7 @@ static int out_length = 0;
 /*
  * Add the links to the output. At the moment the following are
  * recognized:
- * 
+ *
 #if 0
  *	name(*)                 -> ../man?/name.*
 #endif
@@ -550,17 +509,15 @@ static int out_length = 0;
  *	ftp.host.name           -> ftp://ftp.host.name
  *	name@host               -> mailto:name@host
  *	<name.h>                -> file:/usr/include/name.h   (guess)
- * 
+ *
  * Other possible links to add in the future:
- * 
+ *
  * /dir/dir/file  -> file:/dir/dir/file
  */
-static void
-add_links(char *c)
-{
-	int     i, j, nr;
-	char   *f, *g, *h;
-	char   *idtest[6];	/* url, mailto, www, ftp, manpage */
+static void add_links(char *c) {
+	int i, j, nr;
+	char *f, *g, *h;
+	char *idtest[6]; /* url, mailto, www, ftp, manpage */
 
 	out_length += strlen(c);
 	/* search for (section) */
@@ -583,14 +540,14 @@ add_links(char *c)
 			if (idtest[i] && (j < 0 || idtest[i] < idtest[j]))
 				j = i;
 		switch (j) {
-		case 5:	/* <name.h> */
+		case 5: /* <name.h> */
 			f = idtest[5];
 			h = f + 2;
 			g = f;
 			while (g > c && g[-1] != ';')
 				g--;
 			if (g != c) {
-				char    t;
+				char t;
 
 				t = *g;
 				*g = '\0';
@@ -606,7 +563,7 @@ add_links(char *c)
 				c = f + 5;
 			}
 			break;
-		case 4:	/* manpage */
+		case 4: /* manpage */
 #if 0
 			f = idtest[j];
 			/* check section */
@@ -661,17 +618,16 @@ add_links(char *c)
 			idtest[4] = f - 1;
 			c = f;
 #endif
-			break;	/* manpage */
-		case 3:	/* ftp */
-		case 2:	/* www */
+			break; /* manpage */
+		case 3:    /* ftp */
+		case 2:    /* www */
 			g = f = idtest[j];
-			while (*g && (isalnum(*g) || *g == '_' || *g == '-' || *g == '+' ||
-				      *g == '.'))
+			while (*g && (isalnum(*g) || *g == '_' || *g == '-' || *g == '+' || *g == '.'))
 				g++;
 			if (g[-1] == '.')
 				g--;
 			if (g - f > 4) {
-				char    t;
+				char t;
 
 				t = *f;
 				*f = '\0';
@@ -679,8 +635,7 @@ add_links(char *c)
 				*f = t;
 				t = *g;
 				*g = '\0';
-				printf("<A HREF=\"%s://%s\">%s</A>", (j == 3 ? "ftp" : "http"),
-				       f, f);
+				printf("<A HREF=\"%s://%s\">%s</A>", (j == 3 ? "ftp" : "http"), f, f);
 				*g = t;
 				c = g;
 			} else {
@@ -690,19 +645,18 @@ add_links(char *c)
 				f[3] = '.';
 			}
 			break;
-		case 1:	/* mailto */
+		case 1: /* mailto */
 			g = f = idtest[1];
-			while (g > c && (isalnum(g[-1]) || g[-1] == '_' || g[-1] == '-' ||
-			      g[-1] == '+' || g[-1] == '.' || g[-1] == '%'))
+			while (g > c && (isalnum(g[-1]) || g[-1] == '_' || g[-1] == '-' || g[-1] == '+' ||
+			                 g[-1] == '.' || g[-1] == '%'))
 				g--;
 			h = f + 1;
-			while (*h && (isalnum(*h) || *h == '_' || *h == '-' || *h == '+' ||
-				      *h == '.'))
+			while (*h && (isalnum(*h) || *h == '_' || *h == '-' || *h == '+' || *h == '.'))
 				h++;
 			if (*h == '.')
 				h--;
 			if (h - f > 4 && f - g > 1) {
-				char    t;
+				char t;
 
 				t = *g;
 				*g = '\0';
@@ -721,16 +675,15 @@ add_links(char *c)
 				c = f;
 			}
 			break;
-		case 0:	/* url */
+		case 0: /* url */
 			g = f = idtest[0];
 			while (g > c && isalpha(g[-1]) && islower(g[-1]))
 				g--;
 			h = f + 3;
-			while (*h && !isspace(*h) && *h != '<' && *h != '>' && *h != '"' &&
-			       *h != '&')
+			while (*h && !isspace(*h) && *h != '<' && *h != '>' && *h != '"' && *h != '&')
 				h++;
 			if (f - g > 2 && f - g < 7 && h - f > 3) {
-				char    t;
+				char t;
 
 				t = *g;
 				*g = '\0';
@@ -774,13 +727,11 @@ static int current_font = 0;
 static int current_size = 0;
 static int fillout = 1;
 
-static void
-out_html(char *c)
-{
+static void out_html(char *c) {
 	if (!c)
 		return;
 	if (no_newline_output) {
-		int     i = 0;
+		int i = 0;
 
 		no_newline_output = 1;
 		while (c[i]) {
@@ -796,7 +747,7 @@ out_html(char *c)
 	if (scaninbuff) {
 		while (*c) {
 			if (buffpos >= buffmax) {
-				char   *h;
+				char *h;
 
 				h = realloc(buffer, buffmax * 2);
 				if (!h)
@@ -828,17 +779,12 @@ out_html(char *c)
 #define FO3 "<TT>"
 #define FC3 "</TT>"
 
-static char *switchfont[16] = {
-	"", FC0 FO1, FC0 FO2, FC0 FO3,
-	FC1 FO0, "", FC1 FO2, FC1 FO3,
-	FC2 FO0, FC2 FO1, "", FC2 FO3,
-	FC3 FO0, FC3 FO1, FC3 FO2, ""
-};
+static char *switchfont[16] = {"",      FC0 FO1, FC0 FO2, FC0 FO3, FC1 FO0, "",
+                               FC1 FO2, FC1 FO3, FC2 FO0, FC2 FO1, "",      FC2 FO3,
+                               FC3 FO0, FC3 FO1, FC3 FO2, ""};
 
-static char *
-change_to_font(int nr)
-{
-	int     i;
+static char *change_to_font(int nr) {
+	int i;
 
 	switch (nr) {
 	case '0':
@@ -881,10 +827,8 @@ change_to_font(int nr)
 
 static char sizebuf[200];
 
-static char *
-change_to_size(int nr)
-{
-	int     i;
+static char *change_to_size(int nr) {
+	int i;
 
 	switch (nr) {
 	case '0':
@@ -918,7 +862,7 @@ change_to_size(int nr)
 		strcat(sizebuf, "</FONT>");
 	current_size = nr;
 	if (nr) {
-		int     l;
+		int l;
 
 		strcat(sizebuf, "<FONT SIZE=");
 		l = strlen(sizebuf);
@@ -937,19 +881,17 @@ change_to_size(int nr)
 static int asint = 0;
 static int intresult = 0;
 
-#define SKIPEOL while (*c && *c++!='\n')
+#define SKIPEOL while (*c && *c++ != '\n')
 
 static int skip_escape = 0;
 static int single_escape = 0;
 
-static char *
-scan_escape(char *c)
-{
-	char   *h = NULL;
-	char    b[5];
+static char *scan_escape(char *c) {
+	char *h = NULL;
+	char b[5];
 	INTDEF *intd;
-	int     exoutputp, exskipescape;
-	int     i, j;
+	int exoutputp, exskipescape;
+	int i, j;
 
 	intresult = 0;
 	switch (*c) {
@@ -1209,9 +1151,8 @@ scan_escape(char *c)
 typedef struct TABLEITEM TABLEITEM;
 
 struct TABLEITEM {
-	char   *contents;
-	int     size, align, valign, colspan, rowspan, font, vleft, vright, space,
-	        width;
+	char *contents;
+	int size, align, valign, colspan, rowspan, font, vleft, vright, space, width;
 	TABLEITEM *next;
 };
 
@@ -1224,15 +1165,11 @@ struct TABLEROW {
 	TABLEROW *prev, *next;
 };
 
-static char *tableopt[] = {
-	"center", "expand", "box", "allbox", "doublebox",
-	"tab", "linesize", "delim", NULL
-};
+static char *tableopt[] = {"center", "expand",   "box",   "allbox", "doublebox",
+                           "tab",    "linesize", "delim", NULL};
 static int tableoptl[] = {6, 6, 3, 6, 9, 3, 8, 5, 0};
 
-static void
-clear_table(TABLEROW * table)
-{
+static void clear_table(TABLEROW *table) {
 	TABLEROW *tr1, *tr2;
 	TABLEITEM *ti1, *ti2;
 
@@ -1256,19 +1193,17 @@ clear_table(TABLEROW * table)
 
 static char *scan_expression(char *c, int *result);
 
-static char *
-scan_format(char *c, TABLEROW ** result, int *maxcol)
-{
+static char *scan_format(char *c, TABLEROW **result, int *maxcol) {
 	TABLEROW *layout, *currow;
 	TABLEITEM *curfield;
-	int     i, j;
+	int i, j;
 
 	if (*result) {
 		clear_table(*result);
 	}
-	layout = currow = (TABLEROW *) xmalloc(sizeof(TABLEROW));
+	layout = currow = (TABLEROW *)xmalloc(sizeof(TABLEROW));
 	currow->next = currow->prev = NULL;
-	currow->first = curfield = (TABLEITEM *) xmalloc(sizeof(TABLEITEM));
+	currow->first = curfield = (TABLEITEM *)xmalloc(sizeof(TABLEITEM));
 	*curfield = emptyfield;
 	while (*c && *c != '.') {
 		switch (*c) {
@@ -1287,7 +1222,7 @@ scan_format(char *c, TABLEROW ** result, int *maxcol)
 		case '^':
 		case '_':
 			if (curfield->align) {
-				curfield->next = (TABLEITEM *) xmalloc(sizeof(TABLEITEM));
+				curfield->next = (TABLEITEM *)xmalloc(sizeof(TABLEITEM));
 				curfield = curfield->next;
 				*curfield = emptyfield;
 			}
@@ -1367,11 +1302,11 @@ scan_format(char *c, TABLEROW ** result, int *maxcol)
 			break;
 		case ',':
 		case '\n':
-			currow->next = (TABLEROW *) xmalloc(sizeof(TABLEROW));
+			currow->next = (TABLEROW *)xmalloc(sizeof(TABLEROW));
 			currow->next->prev = currow;
 			currow = currow->next;
 			currow->next = NULL;
-			curfield = currow->first = (TABLEITEM *) xmalloc(sizeof(TABLEITEM));
+			curfield = currow->first = (TABLEITEM *)xmalloc(sizeof(TABLEITEM));
 			*curfield = emptyfield;
 			c++;
 			break;
@@ -1381,7 +1316,8 @@ scan_format(char *c, TABLEROW ** result, int *maxcol)
 		}
 	}
 	if (*c == '.')
-		while (*c++ != '\n');
+		while (*c++ != '\n')
+			;
 	*maxcol = 0;
 	currow = layout;
 	while (currow) {
@@ -1399,9 +1335,7 @@ scan_format(char *c, TABLEROW ** result, int *maxcol)
 	return c;
 }
 
-static TABLEROW *
-next_row(TABLEROW * tr)
-{
+static TABLEROW *next_row(TABLEROW *tr) {
 	if (tr->next) {
 		tr = tr->next;
 		if (!tr->next)
@@ -1410,20 +1344,20 @@ next_row(TABLEROW * tr)
 	} else {
 		TABLEITEM *ti, *ti2;
 
-		tr->next = (TABLEROW *) xmalloc(sizeof(TABLEROW));
+		tr->next = (TABLEROW *)xmalloc(sizeof(TABLEROW));
 		tr->next->prev = tr;
 		ti = tr->first;
 		tr = tr->next;
 		tr->next = NULL;
 		if (ti)
-			tr->first = ti2 = (TABLEITEM *) xmalloc(sizeof(TABLEITEM));
+			tr->first = ti2 = (TABLEITEM *)xmalloc(sizeof(TABLEITEM));
 		else
 			tr->first = ti2 = NULL;
 		while (ti != ti2) {
 			*ti2 = *ti;
 			ti2->contents = NULL;
 			if ((ti = ti->next)) {
-				ti2->next = (TABLEITEM *) xmalloc(sizeof(TABLEITEM));
+				ti2->next = (TABLEITEM *)xmalloc(sizeof(TABLEITEM));
 			}
 			ti2 = ti2->next;
 		}
@@ -1433,18 +1367,17 @@ next_row(TABLEROW * tr)
 
 static char itemreset[20] = "\\fR\\s0";
 
-static char *
-scan_table(char *c)
-{
-	char   *t, *h, *g;
-	int     center = 0, expand = 0, box = 0, border = 0, linesize = 1;
-	int     i, j, maxcol = 0, finished = 0;
-	int     oldfont, oldsize, oldfillout;
-	char    itemsep = '\t';
+static char *scan_table(char *c) {
+	char *t, *h, *g;
+	int center = 0, expand = 0, box = 0, border = 0, linesize = 1;
+	int i, j, maxcol = 0, finished = 0;
+	int oldfont, oldsize, oldfillout;
+	char itemsep = '\t';
 	TABLEROW *layout = NULL, *currow, *ftable;
 	TABLEITEM *curfield;
 
-	while (*c++ != '\n');
+	while (*c++ != '\n')
+		;
 	h = c;
 	if (*h == '.')
 		return c - 1;
@@ -1464,7 +1397,8 @@ scan_table(char *c)
 		while (c < h) {
 			while (isspace(*c))
 				c++;
-			for (i = 0; tableopt[i] && strncmp(tableopt[i], c, tableoptl[i]); i++);
+			for (i = 0; tableopt[i] && strncmp(tableopt[i], c, tableoptl[i]); i++)
+				;
 			c = c + tableoptl[i];
 			switch (i) {
 			case 0:
@@ -1483,11 +1417,13 @@ scan_table(char *c)
 				box = 2;
 				break;
 			case 5:
-				while (*c++ != '(');
+				while (*c++ != '(')
+					;
 				itemsep = *c++;
 				break;
 			case 6:
-				while (*c++ != '(');
+				while (*c++ != '(')
+					;
 				linesize = 0;
 				while (isdigit(*c))
 					linesize = linesize * 10 + (*c++) - '0';
@@ -1514,17 +1450,16 @@ scan_table(char *c)
 		if ((*c == '_' || *c == '=') && (c[1] == itemsep || c[1] == '\n')) {
 			if (c[-1] == '\n' && c[1] == '\n') {
 				if (currow->prev) {
-					currow->prev->next = (TABLEROW *) xmalloc(sizeof(TABLEROW));
+					currow->prev->next = (TABLEROW *)xmalloc(sizeof(TABLEROW));
 					currow->prev->next->next = currow;
 					currow->prev->next->prev = currow->prev;
 					currow->prev = currow->prev->next;
 				} else {
-					currow->prev = layout = (TABLEROW *) xmalloc(sizeof(TABLEROW));
+					currow->prev = layout = (TABLEROW *)xmalloc(sizeof(TABLEROW));
 					currow->prev->prev = NULL;
 					currow->prev->next = currow;
 				}
-				curfield = currow->prev->first =
-					(TABLEITEM *) xmalloc(sizeof(TABLEITEM));
+				curfield = currow->prev->first = (TABLEITEM *)xmalloc(sizeof(TABLEITEM));
 				*curfield = emptyfield;
 				curfield->align = *c;
 				curfield->colspan = maxcol;
@@ -1567,7 +1502,8 @@ scan_table(char *c)
 		} else if (*c == '.' && c[1] == 'T' && c[2] == '&' && c[-1] == '\n') {
 			TABLEROW *hr;
 
-			while (*c++ != '\n');
+			while (*c++ != '\n')
+				;
 			hr = currow;
 			currow = currow->prev;
 			hr->prev = NULL;
@@ -1579,7 +1515,8 @@ scan_table(char *c)
 			curfield = currow->first;
 		} else if (*c == '.' && c[1] == 'T' && c[2] == 'E' && c[-1] == '\n') {
 			finished = 1;
-			while (*c++ != '\n');
+			while (*c++ != '\n')
+				;
 			if (currow->prev)
 				currow->prev->next = NULL;
 			currow->prev = NULL;
@@ -1589,19 +1526,18 @@ scan_table(char *c)
 			 * skip troff request inside table (usually only .sp
 			 * )
 			 */
-			while (*c++ != '\n');
+			while (*c++ != '\n')
+				;
 		} else {
 			h = c;
-			while (*c && (*c != itemsep || c[-1] == '\\') &&
-			       (*c != '\n' || c[-1] == '\\'))
+			while (*c && (*c != itemsep || c[-1] == '\\') && (*c != '\n' || c[-1] == '\\'))
 				c++;
 			i = 0;
 			if (*c == itemsep) {
 				i = 1;
 				*c = '\n';
 			}
-			if (h[0] == '\\' && h[2] == '\n' &&
-			    (h[1] == '_' || h[1] == '^')) {
+			if (h[0] == '\\' && h[2] == '\n' && (h[1] == '_' || h[1] == '^')) {
 				if (curfield) {
 					curfield->align = h[1];
 					do {
@@ -1704,14 +1640,14 @@ scan_table(char *c)
 				if (!curfield->valign && curfield->rowspan > 1)
 					out_html(" VALIGN=center");
 				if (curfield->colspan > 1) {
-					char    buf[5];
+					char buf[5];
 
 					out_html(" COLSPAN=");
 					sprintf(buf, "%i", curfield->colspan);
 					out_html(buf);
 				}
 				if (curfield->rowspan > 1) {
-					char    buf[5];
+					char buf[5];
 
 					out_html(" ROWSPAN=");
 					sprintf(buf, "%i", curfield->rowspan);
@@ -1768,11 +1704,9 @@ scan_table(char *c)
 	return c;
 }
 
-static char *
-scan_expression(char *c, int *result)
-{
-	int     value = 0, value2, j = 0, sign = 1, opex = 0;
-	char    oper = 'c';
+static char *scan_expression(char *c, int *result) {
+	int value = 0, value2, j = 0, sign = 1, opex = 0;
+	char oper = 'c';
 
 	if (*c == '!') {
 		c = scan_expression(c + 1, &value);
@@ -1787,9 +1721,9 @@ scan_expression(char *c, int *result)
 		/*
 		 * ?string1?string2? test if string1 equals string2.
 		 */
-		char   *st1 = NULL, *st2 = NULL, *h;
-		char   *tcmp = NULL;
-		char    sep;
+		char *st1 = NULL, *st2 = NULL, *h;
+		char *tcmp = NULL;
+		char sep;
 
 		sep = *c;
 		if (sep == '\\') {
@@ -1844,41 +1778,41 @@ scan_expression(char *c, int *result)
 			case '6':
 			case '7':
 			case '8':
-			case '9':{
-					int     num = 0, denum = 1;
+			case '9': {
+				int num = 0, denum = 1;
 
-					value2 = 0;
-					while (isdigit(*c))
-						value2 = value2 * 10 + ((*c++) - '0');
-					if (*c == '.') {
-						c++;
-						while (isdigit(*c)) {
-							num = num * 10 + ((*c++) - '0');
-							denum = denum * 10;
-						}
+				value2 = 0;
+				while (isdigit(*c))
+					value2 = value2 * 10 + ((*c++) - '0');
+				if (*c == '.') {
+					c++;
+					while (isdigit(*c)) {
+						num = num * 10 + ((*c++) - '0');
+						denum = denum * 10;
 					}
-					if (isalpha(*c)) {
-						/* scale indicator */
-						switch (*c) {
-						case 'i':	/* inch -> 10pt */
-							value2 = value2 * 10 + (num * 10 + denum / 2) / denum;
-							num = 0;
-							break;
-						default:
-							break;
-						}
-						c++;
-					}
-					value2 = value2 + (num + denum / 2) / denum;
-					value2 = sign * value2;
-					opex = 1;
-					break;
 				}
+				if (isalpha(*c)) {
+					/* scale indicator */
+					switch (*c) {
+					case 'i': /* inch -> 10pt */
+						value2 = value2 * 10 + (num * 10 + denum / 2) / denum;
+						num = 0;
+						break;
+					default:
+						break;
+					}
+					c++;
+				}
+				value2 = value2 + (num + denum / 2) / denum;
+				value2 = sign * value2;
+				opex = 1;
+				break;
+			}
 			case '\\':
 				c = scan_escape(c + 1);
 				value2 = intresult * sign;
 				if (isalpha(*c))
-					c++;	/* scale indicator */
+					c++; /* scale indicator */
 				opex = 1;
 				break;
 			case '-':
@@ -1964,11 +1898,9 @@ scan_expression(char *c, int *result)
 	return c;
 }
 
-static void
-trans_char(char *c, char s, char t)
-{
-	char   *sl = c;
-	int     slash = 0;
+static void trans_char(char *c, char s, char t) {
+	char *sl = c;
+	int slash = 0;
 
 	while (*sl != '\n' || slash) {
 		if (!slash) {
@@ -1983,17 +1915,15 @@ trans_char(char *c, char s, char t)
 }
 
 /* Remove \a from C in place.  Return modified C. */
-static char *
-unescape (char *c)
-{
-	int	i, l;
+static char *unescape(char *c) {
+	int i, l;
 
-	l = strlen (c);
+	l = strlen(c);
 	i = 0;
 	while (i < l && c[i]) {
 		if (c[i] == '\a') {
-			if (c[i+1])
-				memmove (c + i, c + i + 1, l - i);
+			if (c[i + 1])
+				memmove(c + i, c + i + 1, l - i);
 			else {
 				c[i] = '\0';
 				break;
@@ -2003,13 +1933,11 @@ unescape (char *c)
 	}
 	return c;
 }
-	
-static char *
-fill_words(char *c, char *words[], int *n)
-{
-	char   *sl = c;
-	int     slash = 0;
-	int     skipspace = 0;
+
+static char *fill_words(char *c, char *words[], int *n) {
+	char *sl = c;
+	int slash = 0;
+	int skipspace = 0;
 
 	*n = 0;
 	words[*n] = sl;
@@ -2050,55 +1978,52 @@ fill_words(char *c, char *words[], int *n)
 	return sl;
 }
 
-static char *abbrev_list[] = {
-	"GSBG", "Getting Started ",
-	"SUBG", "Customizing SunOS",
-	"SHBG", "Basic Troubleshooting",
-	"SVBG", "SunView User's Guide",
-	"MMBG", "Mail and Messages",
-	"DMBG", "Doing More with SunOS",
-	"UNBG", "Using the Network",
-	"GDBG", "Games, Demos &amp; Other Pursuits",
-	"CHANGE", "SunOS 4.1 Release Manual",
-	"INSTALL", "Installing SunOS 4.1",
-	"ADMIN", "System and Network Administration",
-	"SECUR", "Security Features Guide",
-	"PROM", "PROM User's Manual",
-	"DIAG", "Sun System Diagnostics",
-	"SUNDIAG", "Sundiag User's Guide",
-	"MANPAGES", "SunOS Reference Manual",
-	"REFMAN", "SunOS Reference Manual",
-	"SSI", "Sun System Introduction",
-	"SSO", "System Services Overview",
-	"TEXT", "Editing Text Files",
-	"DOCS", "Formatting Documents",
-	"TROFF", "Using <B>nroff</B> and <B>troff</B>",
-	"INDEX", "Global Index",
-	"CPG", "C Programmer's Guide",
-	"CREF", "C Reference Manual",
-	"ASSY", "Assembly Language Reference",
-	"PUL", "Programming Utilities and Libraries",
-	"DEBUG", "Debugging Tools",
-	"NETP", "Network Programming",
-	"DRIVER", "Writing Device Drivers",
-	"STREAMS", "STREAMS Programming",
-	"SBDK", "SBus Developer's Kit",
-	"WDDS", "Writing Device Drivers for the SBus",
-	"FPOINT", "Floating-Point Programmer's Guide",
-	"SVPG", "SunView 1 Programmer's Guide",
-	"SVSPG", "SunView 1 System Programmer's Guide",
-	"PIXRCT", "Pixrect Reference Manual",
-	"CGI", "SunCGI Reference Manual",
-	"CORE", "SunCore Reference Manual",
-	"4ASSY", "Sun-4 Assembly Language Reference",
-	"SARCH", "<FONT SIZE=-1>SPARC</FONT> Architecture Manual",
-	"KR", "The C Programming Language",
-NULL, NULL};
+static char *abbrev_list[] = {"GSBG",     "Getting Started ",
+                              "SUBG",     "Customizing SunOS",
+                              "SHBG",     "Basic Troubleshooting",
+                              "SVBG",     "SunView User's Guide",
+                              "MMBG",     "Mail and Messages",
+                              "DMBG",     "Doing More with SunOS",
+                              "UNBG",     "Using the Network",
+                              "GDBG",     "Games, Demos &amp; Other Pursuits",
+                              "CHANGE",   "SunOS 4.1 Release Manual",
+                              "INSTALL",  "Installing SunOS 4.1",
+                              "ADMIN",    "System and Network Administration",
+                              "SECUR",    "Security Features Guide",
+                              "PROM",     "PROM User's Manual",
+                              "DIAG",     "Sun System Diagnostics",
+                              "SUNDIAG",  "Sundiag User's Guide",
+                              "MANPAGES", "SunOS Reference Manual",
+                              "REFMAN",   "SunOS Reference Manual",
+                              "SSI",      "Sun System Introduction",
+                              "SSO",      "System Services Overview",
+                              "TEXT",     "Editing Text Files",
+                              "DOCS",     "Formatting Documents",
+                              "TROFF",    "Using <B>nroff</B> and <B>troff</B>",
+                              "INDEX",    "Global Index",
+                              "CPG",      "C Programmer's Guide",
+                              "CREF",     "C Reference Manual",
+                              "ASSY",     "Assembly Language Reference",
+                              "PUL",      "Programming Utilities and Libraries",
+                              "DEBUG",    "Debugging Tools",
+                              "NETP",     "Network Programming",
+                              "DRIVER",   "Writing Device Drivers",
+                              "STREAMS",  "STREAMS Programming",
+                              "SBDK",     "SBus Developer's Kit",
+                              "WDDS",     "Writing Device Drivers for the SBus",
+                              "FPOINT",   "Floating-Point Programmer's Guide",
+                              "SVPG",     "SunView 1 Programmer's Guide",
+                              "SVSPG",    "SunView 1 System Programmer's Guide",
+                              "PIXRCT",   "Pixrect Reference Manual",
+                              "CGI",      "SunCGI Reference Manual",
+                              "CORE",     "SunCore Reference Manual",
+                              "4ASSY",    "Sun-4 Assembly Language Reference",
+                              "SARCH",    "<FONT SIZE=-1>SPARC</FONT> Architecture Manual",
+                              "KR",       "The C Programming Language",
+                              NULL,       NULL};
 
-static char *
-lookup_abbrev(char *c)
-{
-	int     i = 0;
+static char *lookup_abbrev(char *c) {
+	int i = 0;
 
 	if (!c)
 		return "";
@@ -2115,10 +2040,8 @@ static int subs = 0;
 static int mip = 0;
 static char label[5] = "lbAA";
 
-static void
-add_to_index(int level, char *item)
-{
-	char   *c = NULL;
+static void add_to_index(int level, char *item) {
+	char *c = NULL;
 
 	label[3]++;
 	if (label[3] > 'Z') {
@@ -2143,10 +2066,8 @@ add_to_index(int level, char *item)
 		mip++;
 }
 
-static char *
-skip_till_newline(char *c)
-{
-	int     lvl = 0;
+static char *skip_till_newline(char *c) {
+	int lvl = 0;
 
 	while (*c && *c != '\n' || lvl > 0) {
 		if (*c == '\\') {
@@ -2167,9 +2088,7 @@ skip_till_newline(char *c)
 	return c;
 }
 
-static void
-outputPageHeader(char *l, char *c, char *r)
-{
+static void outputPageHeader(char *l, char *c, char *r) {
 	out_html("<TABLE WIDTH=100%>\n<TR>\n");
 	out_html("<TH ALIGN=LEFT width=33%>");
 	out_html(l);
@@ -2180,29 +2099,25 @@ outputPageHeader(char *l, char *c, char *r)
 	out_html("\n</TR>\n</TABLE>\n");
 }
 
-static void
-outputPageFooter(char *l, char *c, char *r)
-{
+static void outputPageFooter(char *l, char *c, char *r) {
 	out_html("<HR>\n");
 	outputPageHeader(l, c, r);
 }
 
 static int ifelseval = 0;
 
-static char *
-scan_request(char *c)
-{
+static char *scan_request(char *c) {
 	/* BSD Mandoc stuff */
-	static int mandoc_synopsis = 0;	/* True if we are in the synopsis
-					 * section */
-	static int mandoc_command = 0;	/* True if this is mandoc page */
-	static int mandoc_bd_options;	/* Only copes with non-nested Bd's */
+	static int mandoc_synopsis = 0; /* True if we are in the synopsis
+	                                 * section */
+	static int mandoc_command = 0;  /* True if this is mandoc page */
+	static int mandoc_bd_options;   /* Only copes with non-nested Bd's */
 
-	int     i, j, mode = 0;
-	char   *h;
-	char   *wordlist[MAX_WORDLIST];
-	int     words;
-	char   *sl;
+	int i, j, mode = 0;
+	char *h;
+	char *wordlist[MAX_WORDLIST];
+	int words;
+	char *sl;
 	STRDEF *owndef;
 
 	while (*c == ' ' || *c == '\t')
@@ -2237,103 +2152,102 @@ scan_request(char *c)
 			/* fprintf(stderr, "%s\n", c+2); */
 			exit(0);
 			break;
-		case V('d', 'i'):
-			{
-				STRDEF *de;
-				int     oldcurpos = curpos;
+		case V('d', 'i'): {
+			STRDEF *de;
+			int oldcurpos = curpos;
 
-				c = c + j;
-				i = V(c[0], c[1]);
-				if (*c == '\n') {
-					c++;
-					break;
-				}
-				while (*c && *c != '\n')
-					c++;
+			c = c + j;
+			i = V(c[0], c[1]);
+			if (*c == '\n') {
 				c++;
-				h = c;
-				while (*c && strncmp(c, ".di", 3))
-					while (*c && *c++ != '\n');
-				*c = '\0';
-				de = strdef;
-				while (de && de->nr != i)
-					de = de->next;
-				if (!de) {
-					de = (STRDEF *) xmalloc(sizeof(STRDEF));
-					de->nr = i;
-					de->slen = 0;
-					de->next = strdef;
-					de->st = NULL;
-					strdef = de;
-				} else {
-					if (de->st)
-						free(de->st);
-					de->slen = 0;
-					de->st = NULL;
-				}
-				scan_troff(h, 0, &de->st);
-				*c = '.';
-				while (*c && *c++ != '\n');
 				break;
 			}
+			while (*c && *c != '\n')
+				c++;
+			c++;
+			h = c;
+			while (*c && strncmp(c, ".di", 3))
+				while (*c && *c++ != '\n')
+					;
+			*c = '\0';
+			de = strdef;
+			while (de && de->nr != i)
+				de = de->next;
+			if (!de) {
+				de = (STRDEF *)xmalloc(sizeof(STRDEF));
+				de->nr = i;
+				de->slen = 0;
+				de->next = strdef;
+				de->st = NULL;
+				strdef = de;
+			} else {
+				if (de->st)
+					free(de->st);
+				de->slen = 0;
+				de->st = NULL;
+			}
+			scan_troff(h, 0, &de->st);
+			*c = '.';
+			while (*c && *c++ != '\n')
+				;
+			break;
+		}
 		case V('d', 's'):
 			mode = 1;
-		case V('a', 's'):
-			{
-				STRDEF *de;
-				int     oldcurpos = curpos;
+		case V('a', 's'): {
+			STRDEF *de;
+			int oldcurpos = curpos;
 
+			c = c + j;
+			i = V(c[0], c[1]);
+			j = 0;
+			while (c[j] && c[j] != '\n')
+				j++;
+			if (j < 3) {
 				c = c + j;
-				i = V(c[0], c[1]);
-				j = 0;
-				while (c[j] && c[j] != '\n')
-					j++;
-				if (j < 3) {
-					c = c + j;
-					break;
-				}
-				if (c[1] == ' ')
-					c = c + 1;
-				else
-					c = c + 2;
-				while (isspace(*c))
-					c++;
-				if (*c == '"')
-					c++;
-				de = strdef;
-				while (de && de->nr != i)
-					de = de->next;
-				single_escape = 1;
-				curpos = 0;
-				if (!de) {
-					char   *h;
-
-					de = (STRDEF *) xmalloc(sizeof(STRDEF));
-					de->nr = i;
-					de->slen = 0;
-					de->next = strdef;
-					de->st = NULL;
-					strdef = de;
-					h = NULL;
-					c = scan_troff(c, 1, &h);
-					de->st = h;
-					de->slen = curpos;
-				} else {
-					if (mode) {
-						char   *h = NULL;
-
-						c = scan_troff(c, 1, &h);
-						free(de->st);
-						de->slen = 0;
-						de->st = h;
-					} else
-						c = scan_troff(c, 1, &de->st);
-					de->slen += curpos;
-				}
-				single_escape = 0;
-				curpos = oldcurpos;
+				break;
 			}
-			break;
+			if (c[1] == ' ')
+				c = c + 1;
+			else
+				c = c + 2;
+			while (isspace(*c))
+				c++;
+			if (*c == '"')
+				c++;
+			de = strdef;
+			while (de && de->nr != i)
+				de = de->next;
+			single_escape = 1;
+			curpos = 0;
+			if (!de) {
+				char *h;
+
+				de = (STRDEF *)xmalloc(sizeof(STRDEF));
+				de->nr = i;
+				de->slen = 0;
+				de->next = strdef;
+				de->st = NULL;
+				strdef = de;
+				h = NULL;
+				c = scan_troff(c, 1, &h);
+				de->st = h;
+				de->slen = curpos;
+			} else {
+				if (mode) {
+					char *h = NULL;
+
+					c = scan_troff(c, 1, &h);
+					free(de->st);
+					de->slen = 0;
+					de->st = h;
+				} else
+					c = scan_troff(c, 1, &de->st);
+				de->slen += curpos;
+			}
+			single_escape = 0;
+			curpos = oldcurpos;
+		} break;
 		case V('b', 'r'):
 			if (still_dd)
 				out_html("<DD>");
@@ -2378,7 +2292,7 @@ scan_request(char *c)
 			if (i > 0) {
 				out_html("<CENTER>\n");
 				while (i && *c) {
-					char   *line = NULL;
+					char *line = NULL;
 
 					c = scan_troff(c, 1, &line);
 					if (line && strncmp(line, "<BR>", 4)) {
@@ -2432,7 +2346,7 @@ scan_request(char *c)
 				out_html(change_to_font(0));
 			} else {
 				if (*c == escapesym) {
-					int     fn;
+					int fn;
 
 					c = scan_expression(c, &fn);
 					c--;
@@ -2471,25 +2385,26 @@ scan_request(char *c)
 			} else
 				c = skip_till_newline(c);
 			break;
-		case V('i', 'g'):
-			{
-				char   *endwith = "..\n";
+		case V('i', 'g'): {
+			char *endwith = "..\n";
 
-				i = 3;
-				c = c + j;
-				if (*c != '\n') {
-					endwith = c - 1;
-					i = 1;
-					c[-1] = '.';
-					while (*c && *c != '\n')
-						c++, i++;
-				}
-				c++;
-				while (*c && strncmp(c, endwith, i))
-					while (*c++ != '\n');
-				while (*c++ != '\n');
-				break;
+			i = 3;
+			c = c + j;
+			if (*c != '\n') {
+				endwith = c - 1;
+				i = 1;
+				c[-1] = '.';
+				while (*c && *c != '\n')
+					c++, i++;
 			}
+			c++;
+			while (*c && strncmp(c, endwith, i))
+				while (*c++ != '\n')
+					;
+			while (*c++ != '\n')
+				;
+			break;
+		}
 		case V('n', 'f'):
 			if (fillout) {
 				out_html(change_to_font(0));
@@ -2535,77 +2450,74 @@ scan_request(char *c)
 			curpos = 0;
 			c = skip_till_newline(c);
 			break;
-		case V('s', 'o'):
-			{
-				FILE   *f;
-				struct stat stbuf;
-				int     l = 0;
-				char   *buf;
-				char   *name = NULL;
+		case V('s', 'o'): {
+			FILE *f;
+			struct stat stbuf;
+			int l = 0;
+			char *buf;
+			char *name = NULL;
 
-				curpos = 0;
-				c = c + j;
-				if (*c == '/') {
-					h = c;
-				} else {
-					h = c - 3;
-					h[0] = '.';
-					h[1] = '.';
-					h[2] = '/';
-				}
-				while (*c != '\n')
-					c++;
-				*c = '\0';
-				scan_troff(h, 1, &name);
-				if (name[3] == '/')
-					h = name + 3;
-				else
-					h = name;
-				if (stat(h, &stbuf) != -1)
-					l = stbuf.st_size;
-#if NOCGI
-				if (!out_length) {
-					char   *t, *s;
-
-					t = strrchr(fname, '/');
-					if (!t)
-						t = fname;
-					fprintf(stderr, "ln -s %s.html %s.html\n", h, t);
-					s = strrchr(t, '.');
-					if (!s)
-						s = t;
-					printf("<HTML><HEAD><TITLE> Manpage of %s</TITLE>\n"
-					       "</HEAD><BODY>\n"
-					       "See the manpage for <A HREF=\"%s.html\">%s</A>.\n"
-					       "</BODY></HTML>\n",
-					       s, h, h);
-				} else
-#endif
-				{
-					/*
-					 * this works alright, except for
-					 * section 3
-					 */
-					buf = read_man_page(h);
-					if (!buf) {
-
-						fprintf(stderr, "man2html: unable to open or read file %s.\n",
-							h);
-						out_html("<BLOCKQUOTE>"
-							 "man2html: unable to open or read file.\n");
-						out_html(h);
-						out_html("</BLOCKQUOTE>\n");
-					} else {
-						buf[0] = buf[l] = '\n';
-						buf[l + 1] = buf[l + 2] = '\0';
-						scan_troff(buf + 1, 0, NULL);
-					}
-					if (buf)
-						free(buf);
-				}
-				*c++ = '\n';
-				break;
+			curpos = 0;
+			c = c + j;
+			if (*c == '/') {
+				h = c;
+			} else {
+				h = c - 3;
+				h[0] = '.';
+				h[1] = '.';
+				h[2] = '/';
 			}
+			while (*c != '\n')
+				c++;
+			*c = '\0';
+			scan_troff(h, 1, &name);
+			if (name[3] == '/')
+				h = name + 3;
+			else
+				h = name;
+			if (stat(h, &stbuf) != -1)
+				l = stbuf.st_size;
+#if NOCGI
+			if (!out_length) {
+				char *t, *s;
+
+				t = strrchr(fname, '/');
+				if (!t)
+					t = fname;
+				fprintf(stderr, "ln -s %s.html %s.html\n", h, t);
+				s = strrchr(t, '.');
+				if (!s)
+					s = t;
+				printf("<HTML><HEAD><TITLE> Manpage of %s</TITLE>\n"
+				       "</HEAD><BODY>\n"
+				       "See the manpage for <A HREF=\"%s.html\">%s</A>.\n"
+				       "</BODY></HTML>\n",
+				       s, h, h);
+			} else
+#endif
+			{
+				/*
+				 * this works alright, except for
+				 * section 3
+				 */
+				buf = read_man_page(h);
+				if (!buf) {
+					fprintf(stderr, "man2html: unable to open or read file %s.\n", h);
+					out_html("<BLOCKQUOTE>"
+					         "man2html: unable to open or read file.\n");
+					out_html(h);
+					out_html("</BLOCKQUOTE>\n");
+				} else {
+					buf[0] = buf[l] = '\n';
+					buf[l + 1] = buf[l + 2] = '\0';
+					scan_troff(buf + 1, 0, NULL);
+				}
+				if (buf)
+					free(buf);
+			}
+			*c++ = '\n';
+			break;
+		}
 		case V('t', 'a'):
 			c = c + j;
 			j = 0;
@@ -2662,8 +2574,8 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('O', 'P'):	/* groff manpages use this
-					 * construction */
+		case V('O', 'P'): /* groff manpages use this
+		                   * construction */
 			/* .OP a b : [ <B>a</B> <I>b</I> ] */
 			mode = 1;
 			c[0] = 'B';
@@ -2676,42 +2588,40 @@ scan_request(char *c)
 		case V('I', 'B'):
 		case V('I', 'R'):
 		case V('R', 'B'):
-		case V('R', 'I'):
-			{
-				char    font[2];
+		case V('R', 'I'): {
+			char font[2];
 
-				font[0] = c[0];
-				font[1] = c[1];
-				c = c + j;
-				if (*c == '\n')
-					c++;
-				sl = fill_words(c, wordlist, &words);
-				c = sl + 1;
-				/*
-				 * .BR name (section) indicates a link. It
-				 * will be added in the output routine.
-				 */
-				for (i = 0; i < words; i++) {
-					if (mode) {
-						out_html(" ");
-						curpos++;
-					}
-					wordlist[i][-1] = ' ';
-					out_html(change_to_font(font[i & 1]));
-					scan_troff(wordlist[i], 1, NULL);
-				}
-				out_html(change_to_font('R'));
+			font[0] = c[0];
+			font[1] = c[1];
+			c = c + j;
+			if (*c == '\n')
+				c++;
+			sl = fill_words(c, wordlist, &words);
+			c = sl + 1;
+			/*
+			 * .BR name (section) indicates a link. It
+			 * will be added in the output routine.
+			 */
+			for (i = 0; i < words; i++) {
 				if (mode) {
-					out_html(" ]");
+					out_html(" ");
 					curpos++;
 				}
-				out_html(NEWLINE);
-				if (!fillout)
-					curpos = 0;
-				else
-					curpos++;
+				wordlist[i][-1] = ' ';
+				out_html(change_to_font(font[i & 1]));
+				scan_troff(wordlist[i], 1, NULL);
 			}
-			break;
+			out_html(change_to_font('R'));
+			if (mode) {
+				out_html(" ]");
+				curpos++;
+			}
+			out_html(NEWLINE);
+			if (!fillout)
+				curpos = 0;
+			else
+				curpos++;
+		} break;
 		case V('D', 'T'):
 			for (j = 0; j < 20; j++)
 				tabstops[j] = (j + 1) * 8;
@@ -2803,7 +2713,7 @@ scan_request(char *c)
 		case V('P', 'D'):
 			c = skip_till_newline(c);
 			break;
-		case V('R', 's'):	/* BSD mandoc */
+		case V('R', 's'): /* BSD mandoc */
 		case V('R', 'S'):
 			sl = fill_words(c + j, wordlist, &words);
 			j = 1;
@@ -2817,7 +2727,7 @@ scan_request(char *c)
 				curpos = 0;
 				break;
 			}
-		case V('R', 'e'):	/* BSD mandoc */
+		case V('R', 'e'): /* BSD mandoc */
 		case V('R', 'E'):
 			if (itemdepth > 0) {
 				if (dl_set[itemdepth])
@@ -2844,11 +2754,11 @@ scan_request(char *c)
 			c = scan_troff(c, 1, NULL);
 			out_html(change_to_size('0'));
 			break;
-		case V('S', 's'):	/* BSD mandoc */
+		case V('S', 's'): /* BSD mandoc */
 			mandoc_command = 1;
 		case V('S', 'S'):
 			mode = 1;
-		case V('S', 'h'):	/* BSD mandoc */
+		case V('S', 'h'): /* BSD mandoc */
 			/* hack for fallthru from above */
 			mandoc_command = !mode || mandoc_command;
 		case V('S', 'H'):
@@ -2888,13 +2798,13 @@ scan_request(char *c)
 		case V('T', 'S'):
 			c = scan_table(c);
 			break;
-		case V('D', 't'):	/* BSD mandoc */
+		case V('D', 't'): /* BSD mandoc */
 			mandoc_command = 1;
 		case V('T', 'H'):
 			if (!output_possible) {
 				sl = fill_words(c + j, wordlist, &words);
 				if (words > 1) {
-					char	*t;
+					char *t;
 					for (i = 1; i < words; i++)
 						wordlist[i][-1] = '\0';
 					*sl = '\0';
@@ -2918,7 +2828,7 @@ scan_request(char *c)
 					out_html("</TITLE>\n</HEAD>\n<BODY>");
 
 					outputPageHeader(th_page_and_sec, th_datestr, th_page_and_sec);
-					
+
 					out_html("<BR><A HREF=\"#index\">Index</A>\n");
 					*sl = '\n';
 					out_html("<HR>\n");
@@ -3000,7 +2910,7 @@ scan_request(char *c)
 				while (intd && intd->nr != i)
 					intd = intd->next;
 				if (!intd) {
-					intd = (INTDEF *) xmalloc(sizeof(INTDEF));
+					intd = (INTDEF *)xmalloc(sizeof(INTDEF));
 					intd->nr = i;
 					intd->val = 0;
 					intd->incr = 0;
@@ -3030,7 +2940,7 @@ scan_request(char *c)
 			/* define or handle as .ig yy */
 			{
 				STRDEF *de;
-				int     olen = 0;
+				int olen = 0;
 
 				c = c + j;
 				sl = fill_words(c, wordlist, &words);
@@ -3073,7 +2983,7 @@ scan_request(char *c)
 							free(de->st);
 						de->st = h;
 					} else {
-						de = (STRDEF *) xmalloc(sizeof(STRDEF));
+						de = (STRDEF *)xmalloc(sizeof(STRDEF));
 						de->nr = i;
 						de->next = defdef;
 						de->st = h;
@@ -3083,40 +2993,40 @@ scan_request(char *c)
 			}
 			c = skip_till_newline(c);
 			break;
-		case V('B', 'l'):	/* BSD mandoc */
-			{
-				char    list_options[NULL_TERMINATED(MED_STR_MAX)];
-				char   *nl = strchr(c, '\n');
+		case V('B', 'l'): /* BSD mandoc */
+		{
+			char list_options[NULL_TERMINATED(MED_STR_MAX)];
+			char *nl = strchr(c, '\n');
 
-				c = c + j;
-				if (dl_set[itemdepth]) {	/* These things can
-								 * nest. */
-					itemdepth++;
-				}
-				if (nl) {	/* Parse list options */
-					strlimitcpy(list_options, c, nl - c, MED_STR_MAX);
-				}
-				if (strstr(list_options, "-bullet")) {	/* HTML Unnumbered List */
-					dl_set[itemdepth] = BL_BULLET_LIST;
-					out_html("<UL>\n");
-				} else if (strstr(list_options, "-enum")) {	/* HTML Ordered List */
-					dl_set[itemdepth] = BL_ENUM_LIST;
-					out_html("<OL>\n");
-				} else {	/* HTML Descriptive List */
-					dl_set[itemdepth] = BL_DESC_LIST;
-					out_html("<DL COMPACT>\n");
-				}
-				if (fillout)
-					out_html("<P>\n");
-				else {
-					out_html(NEWLINE);
-					NEWLINE[0] = '\n';
-				}
-				curpos = 0;
-				c = skip_till_newline(c);
-				break;
+			c = c + j;
+			if (dl_set[itemdepth]) { /* These things can
+				                      * nest. */
+				itemdepth++;
 			}
-		case V('E', 'l'):	/* BSD mandoc */
+			if (nl) { /* Parse list options */
+				strlimitcpy(list_options, c, nl - c, MED_STR_MAX);
+			}
+			if (strstr(list_options, "-bullet")) { /* HTML Unnumbered List */
+				dl_set[itemdepth] = BL_BULLET_LIST;
+				out_html("<UL>\n");
+			} else if (strstr(list_options, "-enum")) { /* HTML Ordered List */
+				dl_set[itemdepth] = BL_ENUM_LIST;
+				out_html("<OL>\n");
+			} else { /* HTML Descriptive List */
+				dl_set[itemdepth] = BL_DESC_LIST;
+				out_html("<DL COMPACT>\n");
+			}
+			if (fillout)
+				out_html("<P>\n");
+			else {
+				out_html(NEWLINE);
+				NEWLINE[0] = '\n';
+			}
+			curpos = 0;
+			c = skip_till_newline(c);
+			break;
+		}
+		case V('E', 'l'): /* BSD mandoc */
 			c = c + j;
 			if (dl_set[itemdepth] & BL_DESC_LIST) {
 				out_html("</DL>\n");
@@ -3137,7 +3047,7 @@ scan_request(char *c)
 			curpos = 0;
 			c = skip_till_newline(c);
 			break;
-		case V('I', 't'):	/* BSD mandoc */
+		case V('I', 't'): /* BSD mandoc */
 			c = c + j;
 			if (strncmp(c, "Xo", 2) == 0 && isspace(*(c + 2))) {
 				c = skip_till_newline(c);
@@ -3145,12 +3055,12 @@ scan_request(char *c)
 			if (dl_set[itemdepth] & BL_DESC_LIST) {
 				out_html("<DT>");
 				out_html(change_to_font('B'));
-				if (*c == '\n') {	/* Don't allow embedded
-							 * comms after a newline */
+				if (*c == '\n') { /* Don't allow embedded
+					               * comms after a newline */
 					c++;
 					c = scan_troff(c, 1, NULL);
-				} else {	/* Do allow embedded comms on
-						 * the same line. */
+				} else { /* Do allow embedded comms on
+					      * the same line. */
 					c = scan_troff_mandoc(c, 1, NULL);
 				}
 				out_html(change_to_font('R'));
@@ -3166,10 +3076,10 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('B', 'k'):	/* BSD mandoc */
-		case V('E', 'k'):	/* BSD mandoc */
-		case V('D', 'd'):	/* BSD mandoc */
-		case V('O', 's'):	/* BSD mandoc */
+		case V('B', 'k'): /* BSD mandoc */
+		case V('E', 'k'): /* BSD mandoc */
+		case V('D', 'd'): /* BSD mandoc */
+		case V('O', 's'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			if (*c == '\n')
@@ -3181,7 +3091,7 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('B', 't'):	/* BSD mandoc */
+		case V('B', 't'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			out_html(" is currently in beta test.");
@@ -3190,7 +3100,7 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('B', 'x'):	/* BSD mandoc */
+		case V('B', 'x'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			if (*c == '\n')
@@ -3202,7 +3112,7 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('D', 'l'):	/* BSD mandoc */
+		case V('D', 'l'): /* BSD mandoc */
 			c = c + j;
 			out_html(NEWLINE);
 			out_html("<BLOCKQUOTE>");
@@ -3217,37 +3127,36 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('B', 'd'):	/* BSD mandoc */
-			{	/* Seems like a kind of example/literal mode */
-				char    bd_options[NULL_TERMINATED(MED_STR_MAX)];
-				char   *nl = strchr(c, '\n');
+		case V('B', 'd'): /* BSD mandoc */
+		{                 /* Seems like a kind of example/literal mode */
+			char bd_options[NULL_TERMINATED(MED_STR_MAX)];
+			char *nl = strchr(c, '\n');
 
-				c = c + j;
-				if (nl) {
-					strlimitcpy(bd_options, c, nl - c, MED_STR_MAX);
-				}
-				out_html(NEWLINE);
-				mandoc_bd_options = 0;	/* Remember options for
-							 * terminating Bl */
-				if (strstr(bd_options, "-offset indent")) {
-					mandoc_bd_options |= BD_INDENT;
-					out_html("<BLOCKQUOTE>\n");
-				}
-				if (strstr(bd_options, "-literal")
-				    || strstr(bd_options, "-unfilled")) {
-					if (fillout) {
-						mandoc_bd_options |= BD_LITERAL;
-						out_html(change_to_font(0));
-						out_html(change_to_size('0'));
-						out_html("<PRE>\n");
-					}
-					curpos = 0;
-					fillout = 0;
-				}
-				c = skip_till_newline(c);
-				break;
+			c = c + j;
+			if (nl) {
+				strlimitcpy(bd_options, c, nl - c, MED_STR_MAX);
 			}
-		case V('E', 'd'):	/* BSD mandoc */
+			out_html(NEWLINE);
+			mandoc_bd_options = 0; /* Remember options for
+			                        * terminating Bl */
+			if (strstr(bd_options, "-offset indent")) {
+				mandoc_bd_options |= BD_INDENT;
+				out_html("<BLOCKQUOTE>\n");
+			}
+			if (strstr(bd_options, "-literal") || strstr(bd_options, "-unfilled")) {
+				if (fillout) {
+					mandoc_bd_options |= BD_LITERAL;
+					out_html(change_to_font(0));
+					out_html(change_to_size('0'));
+					out_html("<PRE>\n");
+				}
+				curpos = 0;
+				fillout = 0;
+			}
+			c = skip_till_newline(c);
+			break;
+		}
+		case V('E', 'd'): /* BSD mandoc */
 			if (mandoc_bd_options & BD_LITERAL) {
 				if (!fillout) {
 					out_html(change_to_font(0));
@@ -3261,7 +3170,7 @@ scan_request(char *c)
 			fillout = 1;
 			c = skip_till_newline(c);
 			break;
-		case V('B', 'e'):	/* BSD mandoc */
+		case V('B', 'e'): /* BSD mandoc */
 			c = c + j;
 			if (fillout)
 				out_html("<P>");
@@ -3272,70 +3181,69 @@ scan_request(char *c)
 			curpos = 0;
 			c = skip_till_newline(c);
 			break;
-		case V('X', 'r'):	/* BSD mandoc */
-			{
-				/*
-				 * Translate xyz 1 to xyz(1) Allow for
-				 * multiple spaces.  Allow the section to be
-				 * missing.
-				 */
-				char    buff[NULL_TERMINATED(MED_STR_MAX)];
-				char   *bufptr;
+		case V('X', 'r'): /* BSD mandoc */
+		{
+			/*
+			 * Translate xyz 1 to xyz(1) Allow for
+			 * multiple spaces.  Allow the section to be
+			 * missing.
+			 */
+			char buff[NULL_TERMINATED(MED_STR_MAX)];
+			char *bufptr;
 
-				trans_char(c, '"', '\a');
-				bufptr = buff;
-				c = c + j;
-				if (*c == '\n')
-					c++;	/* Skip spaces */
-				while (isspace(*c) && *c != '\n')
-					c++;
-				while (isalnum(*c)) {	/* Copy the xyz part */
-					*bufptr = *c;
-					bufptr++;
-					if (bufptr >= buff + MED_STR_MAX)
-						break;
-					c++;
-				}
-				while (isspace(*c) && *c != '\n')
-					c++;	/* Skip spaces */
-				if (isdigit(*c)) {	/* Convert the number if
-							 * there is one */
-					*bufptr = '(';
-					bufptr++;
-					if (bufptr < buff + MED_STR_MAX) {
-						while (isalnum(*c)) {
-							*bufptr = *c;
-							bufptr++;
-							if (bufptr >= buff + MED_STR_MAX)
-								break;
-							c++;
-						}
-						if (bufptr < buff + MED_STR_MAX) {
-							*bufptr = ')';
-							bufptr++;
-						}
-					}
-				}
-				while (*c != '\n') {	/* Copy the remainder */
-					if (!isspace(*c)) {
+			trans_char(c, '"', '\a');
+			bufptr = buff;
+			c = c + j;
+			if (*c == '\n')
+				c++; /* Skip spaces */
+			while (isspace(*c) && *c != '\n')
+				c++;
+			while (isalnum(*c)) { /* Copy the xyz part */
+				*bufptr = *c;
+				bufptr++;
+				if (bufptr >= buff + MED_STR_MAX)
+					break;
+				c++;
+			}
+			while (isspace(*c) && *c != '\n')
+				c++;           /* Skip spaces */
+			if (isdigit(*c)) { /* Convert the number if
+				                * there is one */
+				*bufptr = '(';
+				bufptr++;
+				if (bufptr < buff + MED_STR_MAX) {
+					while (isalnum(*c)) {
 						*bufptr = *c;
 						bufptr++;
 						if (bufptr >= buff + MED_STR_MAX)
 							break;
+						c++;
 					}
-					c++;
+					if (bufptr < buff + MED_STR_MAX) {
+						*bufptr = ')';
+						bufptr++;
+					}
 				}
-				*bufptr = '\n';
-				scan_troff_mandoc(buff, 1, NULL);
-
-				out_html(NEWLINE);
-				if (fillout)
-					curpos++;
-				else
-					curpos = 0;
 			}
-			break;
-		case V('F', 'l'):	/* BSD mandoc */
+			while (*c != '\n') { /* Copy the remainder */
+				if (!isspace(*c)) {
+					*bufptr = *c;
+					bufptr++;
+					if (bufptr >= buff + MED_STR_MAX)
+						break;
+				}
+				c++;
+			}
+			*bufptr = '\n';
+			scan_troff_mandoc(buff, 1, NULL);
+
+			out_html(NEWLINE);
+			if (fillout)
+				curpos++;
+			else
+				curpos = 0;
+		} break;
+		case V('F', 'l'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			out_html("-");
@@ -3350,8 +3258,8 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('P', 'a'):	/* BSD mandoc */
-		case V('P', 'f'):	/* BSD mandoc */
+		case V('P', 'a'): /* BSD mandoc */
+		case V('P', 'f'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			if (*c == '\n')
@@ -3363,7 +3271,7 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('P', 'p'):	/* BSD mandoc */
+		case V('P', 'p'): /* BSD mandoc */
 			if (fillout)
 				out_html("<P>\n");
 			else {
@@ -3373,7 +3281,7 @@ scan_request(char *c)
 			curpos = 0;
 			c = skip_till_newline(c);
 			break;
-		case V('D', 'q'):	/* BSD mandoc */
+		case V('D', 'q'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			if (*c == '\n')
@@ -3387,7 +3295,7 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('O', 'p'):	/* BSD mandoc */
+		case V('O', 'p'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			if (*c == '\n')
@@ -3403,7 +3311,7 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('O', 'o'):	/* BSD mandoc */
+		case V('O', 'o'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			if (*c == '\n')
@@ -3416,7 +3324,7 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('O', 'c'):	/* BSD mandoc */
+		case V('O', 'c'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			c = scan_troff_mandoc(c, 1, NULL);
@@ -3427,7 +3335,7 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('P', 'q'):	/* BSD mandoc */
+		case V('P', 'q'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			if (*c == '\n')
@@ -3441,41 +3349,41 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('Q', 'l'):	/* BSD mandoc */
-			{	/* Single quote first word in the line */
-				char   *sp;
+		case V('Q', 'l'): /* BSD mandoc */
+		{                 /* Single quote first word in the line */
+			char *sp;
 
-				trans_char(c, '"', '\a');
-				c = c + j;
-				if (*c == '\n')
-					c++;
-				sp = c;
-				do {	/* Find first whitespace after the
-					 * first word that isn't a mandoc
-					 * macro */
-					while (*sp && isspace(*sp))
-						sp++;
-					while (*sp && !isspace(*sp))
-						sp++;
-				} while (*sp && isupper(*(sp - 2)) && islower(*(sp - 1)));
+			trans_char(c, '"', '\a');
+			c = c + j;
+			if (*c == '\n')
+				c++;
+			sp = c;
+			do { /* Find first whitespace after the
+				  * first word that isn't a mandoc
+				  * macro */
+				while (*sp && isspace(*sp))
+					sp++;
+				while (*sp && !isspace(*sp))
+					sp++;
+			} while (*sp && isupper(*(sp - 2)) && islower(*(sp - 1)));
 
-				/*
-				 * Use a newline to mark the end of text to
-				 * be quoted
-				 */
-				if (*sp)
-					*sp = '\n';
-				out_html("`");	/* Quote the text */
-				c = scan_troff_mandoc(c, 1, NULL);
-				out_html("'");
-				out_html(NEWLINE);
-				if (fillout)
-					curpos++;
-				else
-					curpos = 0;
-				break;
-			}
-		case V('S', 'q'):	/* BSD mandoc */
+			/*
+			 * Use a newline to mark the end of text to
+			 * be quoted
+			 */
+			if (*sp)
+				*sp = '\n';
+			out_html("`"); /* Quote the text */
+			c = scan_troff_mandoc(c, 1, NULL);
+			out_html("'");
+			out_html(NEWLINE);
+			if (fillout)
+				curpos++;
+			else
+				curpos = 0;
+			break;
+		}
+		case V('S', 'q'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			if (*c == '\n')
@@ -3489,13 +3397,13 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('A', 'r'):	/* BSD mandoc */
+		case V('A', 'r'): /* BSD mandoc */
 			/* parse one line in italics */
 			out_html(change_to_font('I'));
 			trans_char(c, '"', '\a');
 			c = c + j;
-			if (*c == '\n') {	/* An empty Ar means "file
-						 * ..." */
+			if (*c == '\n') { /* An empty Ar means "file
+				               * ..." */
 				out_html("file ...");
 			} else {
 				c = scan_troff_mandoc(c, 1, NULL);
@@ -3507,10 +3415,10 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('A', 'd'):	/* BSD mandoc */
-		case V('E', 'm'):	/* BSD mandoc */
-		case V('V', 'a'):	/* BSD mandoc */
-		case V('X', 'c'):	/* BSD mandoc */
+		case V('A', 'd'): /* BSD mandoc */
+		case V('E', 'm'): /* BSD mandoc */
+		case V('V', 'a'): /* BSD mandoc */
+		case V('X', 'c'): /* BSD mandoc */
 			/* parse one line in italics */
 			out_html(change_to_font('I'));
 			trans_char(c, '"', '\a');
@@ -3525,7 +3433,7 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('N', 'd'):	/* BSD mandoc */
+		case V('N', 'd'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			if (*c == '\n')
@@ -3538,62 +3446,62 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('N', 'm'):	/* BSD mandoc */
-			{
-				static char mandoc_name[NULL_TERMINATED(SMALL_STR_MAX)] = "";
+		case V('N', 'm'): /* BSD mandoc */
+		{
+			static char mandoc_name[NULL_TERMINATED(SMALL_STR_MAX)] = "";
 
-				trans_char(c, '"', '\a');
-				c = c + j;
-				if (mandoc_synopsis) {	/* Break lines only in
-							 * the Synopsis. The
-							 * Synopsis section
-							 * seems to be treated
-							 * as a special case -
-							 * Bummer! */
-					static int count = 0;	/* Don't break on the
-								 * first Nm */
+			trans_char(c, '"', '\a');
+			c = c + j;
+			if (mandoc_synopsis) {    /* Break lines only in
+				                       * the Synopsis. The
+				                       * Synopsis section
+				                       * seems to be treated
+				                       * as a special case -
+				                       * Bummer! */
+				static int count = 0; /* Don't break on the
+				                       * first Nm */
 
-					if (count) {
-						out_html("<BR>");
-					} else {
-						char   *end = strchr(c, '\n');
-
-						if (end) {	/* Remember the name for
-								 * later. */
-							strlimitcpy(mandoc_name, c, end - c, SMALL_STR_MAX);
-						}
-					}
-					count++;
-				}
-				out_html(change_to_font('B'));
-				while (*c == ' ' || *c == '\t')
-					c++;
-				if (*c == '\n') {	/* If Nm has no
-							 * argument, use one
-							 * from an earlier Nm
-							 * command that did have
-							 * one.  Hope there
-							 * aren't too many
-							 * commands that do
-							 * this. */
-					out_html(mandoc_name);
+				if (count) {
+					out_html("<BR>");
 				} else {
-					c = scan_troff_mandoc(c, 1, NULL);
+					char *end = strchr(c, '\n');
+
+					if (end) { /* Remember the name for
+						        * later. */
+						strlimitcpy(mandoc_name, c, end - c, SMALL_STR_MAX);
+					}
 				}
-				out_html(change_to_font('R'));
-				out_html(NEWLINE);
-				if (fillout)
-					curpos++;
-				else
-					curpos = 0;
-				break;
+				count++;
 			}
-		case V('C', 'd'):	/* BSD mandoc */
-		case V('C', 'm'):	/* BSD mandoc */
-		case V('I', 'c'):	/* BSD mandoc */
-		case V('M', 's'):	/* BSD mandoc */
-		case V('O', 'r'):	/* BSD mandoc */
-		case V('S', 'y'):	/* BSD mandoc */
+			out_html(change_to_font('B'));
+			while (*c == ' ' || *c == '\t')
+				c++;
+			if (*c == '\n') { /* If Nm has no
+				               * argument, use one
+				               * from an earlier Nm
+				               * command that did have
+				               * one.  Hope there
+				               * aren't too many
+				               * commands that do
+				               * this. */
+				out_html(mandoc_name);
+			} else {
+				c = scan_troff_mandoc(c, 1, NULL);
+			}
+			out_html(change_to_font('R'));
+			out_html(NEWLINE);
+			if (fillout)
+				curpos++;
+			else
+				curpos = 0;
+			break;
+		}
+		case V('C', 'd'): /* BSD mandoc */
+		case V('C', 'm'): /* BSD mandoc */
+		case V('I', 'c'): /* BSD mandoc */
+		case V('M', 's'): /* BSD mandoc */
+		case V('O', 'r'): /* BSD mandoc */
+		case V('S', 'y'): /* BSD mandoc */
 			/* parse one line in bold */
 			out_html(change_to_font('B'));
 			trans_char(c, '"', '\a');
@@ -3608,14 +3516,14 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('D', 'v'):	/* BSD mandoc */
-		case V('E', 'v'):	/* BSD mandoc */
-		case V('F', 'r'):	/* BSD mandoc */
-		case V('L', 'i'):	/* BSD mandoc */
-		case V('N', 'o'):	/* BSD mandoc */
-		case V('N', 's'):	/* BSD mandoc */
-		case V('T', 'n'):	/* BSD mandoc */
-		case V('n', 'N'):	/* BSD mandoc */
+		case V('D', 'v'): /* BSD mandoc */
+		case V('E', 'v'): /* BSD mandoc */
+		case V('F', 'r'): /* BSD mandoc */
+		case V('L', 'i'): /* BSD mandoc */
+		case V('N', 'o'): /* BSD mandoc */
+		case V('N', 's'): /* BSD mandoc */
+		case V('T', 'n'): /* BSD mandoc */
+		case V('n', 'N'): /* BSD mandoc */
 			trans_char(c, '"', '\a');
 			c = c + j;
 			if (*c == '\n')
@@ -3629,7 +3537,7 @@ scan_request(char *c)
 			else
 				curpos = 0;
 			break;
-		case V('%', 'A'):	/* BSD mandoc biblio stuff */
+		case V('%', 'A'): /* BSD mandoc biblio stuff */
 		case V('%', 'D'):
 		case V('%', 'N'):
 		case V('%', 'O'):
@@ -3639,8 +3547,8 @@ scan_request(char *c)
 			c = c + j;
 			if (*c == '\n')
 				c++;
-			c = scan_troff(c, 1, NULL);	/* Don't allow embedded
-							 * mandoc coms */
+			c = scan_troff(c, 1, NULL); /* Don't allow embedded
+			                             * mandoc coms */
 			if (fillout)
 				curpos++;
 			else
@@ -3654,8 +3562,8 @@ scan_request(char *c)
 			out_html(change_to_font('I'));
 			if (*c == '\n')
 				c++;
-			c = scan_troff(c, 1, NULL);	/* Don't allow embedded
-							 * mandoc coms */
+			c = scan_troff(c, 1, NULL); /* Don't allow embedded
+			                             * mandoc coms */
 			out_html(change_to_font('R'));
 			if (fillout)
 				curpos++;
@@ -3668,9 +3576,9 @@ scan_request(char *c)
 			while (owndef && owndef->nr != i)
 				owndef = owndef->next;
 			if (owndef) {
-				char  **oldargument;
-				int     deflen;
-				int     onff;
+				char **oldargument;
+				int deflen;
+				int onff;
 
 				sl = fill_words(c + j, wordlist, &words);
 				c = sl + 1;
@@ -3678,7 +3586,7 @@ scan_request(char *c)
 				for (i = 1; i < words; i++)
 					wordlist[i][-1] = '\0';
 				for (i = 0; i < words; i++) {
-					char   *h = NULL;
+					char *h = NULL;
 
 					if (mandoc_command) {
 						scan_troff_mandoc(wordlist[i], 1, &h);
@@ -3690,7 +3598,8 @@ scan_request(char *c)
 				for (i = words; i < 20; i++)
 					wordlist[i] = NULL;
 				deflen = strlen(owndef->st);
-				for (i = 0; owndef->st[deflen + 2 + i] = owndef->st[i]; i++);
+				for (i = 0; owndef->st[deflen + 2 + i] = owndef->st[i]; i++)
+					;
 				oldargument = argument;
 				argument = wordlist;
 				onff = newline_for_fun;
@@ -3706,19 +3615,18 @@ scan_request(char *c)
 						free(wordlist[i]);
 				*sl = '\n';
 			} else if (mandoc_command &&
-				   ((isupper(*c) && islower(*(c + 1)))
-				    || (islower(*c) && isupper(*(c + 1))))
-				) {	/* Let through any BSD mandoc
-					 * commands that haven't been delt
-					 * with. I don't want to miss
-					 * anything out of the text. */
-				char    buf[4];
+			           ((isupper(*c) && islower(*(c + 1))) ||
+			            (islower(*c) && isupper(*(c + 1))))) { /* Let through any BSD mandoc
+				                                                * commands that haven't been delt
+				                                                * with. I don't want to miss
+				                                                * anything out of the text. */
+				char buf[4];
 
 				strncpy(buf, c, 2);
 				buf[2] = ' ';
 				buf[3] = '\0';
-				out_html(buf);	/* Print the command (it
-						 * might just be text). */
+				out_html(buf); /* Print the command (it
+				                * might just be text). */
 				c = c + j;
 				trans_char(c, '"', '\a');
 				if (*c == '\n')
@@ -3744,28 +3652,29 @@ scan_request(char *c)
 	return c;
 }
 
-static void
-flush(void)
-{
+static void flush(void) {
 }
 
 static int contained_tab = 0;
-static int mandoc_line = 0;	/* Signals whether to look for embedded
-				 * mandoc commands. */
+static int mandoc_line = 0; /* Signals whether to look for embedded
+                             * mandoc commands. */
 
 /* san : stop at newline */
-static char *
-scan_troff(char *c, int san, char **result)
-{
-	char   *h;
-	char    intbuff[NULL_TERMINATED(MED_STR_MAX)];
-	int     ibp = 0;
-	int     i;
-	char   *exbuffer;
-	int     exbuffpos, exbuffmax, exscaninbuff, exnewline_for_fun;
-	int     usenbsp = 0;
+static char *scan_troff(char *c, int san, char **result) {
+	char *h;
+	char intbuff[NULL_TERMINATED(MED_STR_MAX)];
+	int ibp = 0;
+	int i;
+	char *exbuffer;
+	int exbuffpos, exbuffmax, exscaninbuff, exnewline_for_fun;
+	int usenbsp = 0;
 
-#define FLUSHIBP  if (ibp) { intbuff[ibp]=0; out_html(intbuff); ibp=0; }
+#define FLUSHIBP           \
+	if (ibp) {             \
+		intbuff[ibp] = 0;  \
+		out_html(intbuff); \
+		ibp = 0;           \
+	}
 
 	exbuffer = buffer;
 	exbuffpos = buffpos;
@@ -3789,7 +3698,6 @@ scan_troff(char *c, int san, char **result)
 	/* start scanning */
 
 	while (*h && (!san || newline_for_fun || *h != '\n')) {
-
 		if (*h == escapesym) {
 			h++;
 			FLUSHIBP;
@@ -3800,10 +3708,8 @@ scan_troff(char *c, int san, char **result)
 			h = scan_request(h);
 			if (san && h[-1] == '\n')
 				h--;
-		} else if (mandoc_line
-			   && *(h) && isupper(*(h))
-			   && *(h + 1) && islower(*(h + 1))
-			   && *(h + 2) && isspace(*(h + 2))) {
+		} else if (mandoc_line && *(h) && isupper(*(h)) && *(h + 1) && islower(*(h + 1)) &&
+		           *(h + 2) && isspace(*(h + 2))) {
 			/*
 			 * BSD embedded command eg ".It Fl Ar arg1 Fl Ar
 			 * arg2"
@@ -3819,7 +3725,7 @@ scan_troff(char *c, int san, char **result)
 			if (san && h[-1] == '\n')
 				h--;
 		} else {
-			int     mx;
+			int mx;
 
 			if (h[-1] == '\n' && still_dd && isalnum(*h)) {
 				/*
@@ -3880,36 +3786,34 @@ scan_troff(char *c, int san, char **result)
 				usenbsp = 0;
 				intbuff[ibp++] = '\n';
 				break;
-			case '\t':
-				{
-					int     curtab = 0;
+			case '\t': {
+				int curtab = 0;
 
-					contained_tab = 1;
-					FLUSHIBP;
-					/* like a typewriter, not like TeX */
-					tabstops[19] = curpos + 1;
-					while (curtab < maxtstop && tabstops[curtab] <= curpos)
-						curtab++;
-					if (curtab < maxtstop) {
-						if (!fillout) {
-							while (curpos < tabstops[curtab]) {
-								intbuff[ibp++] = ' ';
-								if (ibp > 480) {
-									FLUSHIBP;
-								}
-								curpos++;
+				contained_tab = 1;
+				FLUSHIBP;
+				/* like a typewriter, not like TeX */
+				tabstops[19] = curpos + 1;
+				while (curtab < maxtstop && tabstops[curtab] <= curpos)
+					curtab++;
+				if (curtab < maxtstop) {
+					if (!fillout) {
+						while (curpos < tabstops[curtab]) {
+							intbuff[ibp++] = ' ';
+							if (ibp > 480) {
+								FLUSHIBP;
 							}
-						} else {
-							out_html("<TT>");
-							while (curpos < tabstops[curtab]) {
-								out_html("&nbsp;");
-								curpos++;
-							}
-							out_html("</TT>");
+							curpos++;
 						}
+					} else {
+						out_html("<TT>");
+						while (curpos < tabstops[curtab]) {
+							out_html("&nbsp;");
+							curpos++;
+						}
+						out_html("</TT>");
 					}
 				}
-				break;
+			} break;
 			default:
 				if (*h == ' ' && (h[-1] == '\n' || usenbsp)) {
 					FLUSHIBP;
@@ -3924,12 +3828,12 @@ scan_troff(char *c, int san, char **result)
 						intbuff[ibp++] = ' ';
 				} else if (*h > 31 && *h < 127)
 					intbuff[ibp++] = *h;
-				else if (((unsigned char) (*h)) > 127) {
+				else if (((unsigned char)(*h)) > 127) {
 					intbuff[ibp++] = '&';
 					intbuff[ibp++] = '#';
-					intbuff[ibp++] = '0' + ((unsigned char) (*h)) / 100;
-					intbuff[ibp++] = '0' + (((unsigned char) (*h)) % 100) / 10;
-					intbuff[ibp++] = '0' + ((unsigned char) (*h)) % 10;
+					intbuff[ibp++] = '0' + ((unsigned char)(*h)) / 100;
+					intbuff[ibp++] = '0' + (((unsigned char)(*h)) % 100) / 10;
+					intbuff[ibp++] = '0' + ((unsigned char)(*h)) % 10;
 					intbuff[ibp++] = ';';
 				}
 				curpos++;
@@ -3956,21 +3860,16 @@ scan_troff(char *c, int san, char **result)
 	return h;
 }
 
-
-static char *
-scan_troff_mandoc(char *c, int san, char **result)
-{
-	char   *ret, *end = c;
-	int     oldval = mandoc_line;
+static char *scan_troff_mandoc(char *c, int san, char **result) {
+	char *ret, *end = c;
+	int oldval = mandoc_line;
 
 	mandoc_line = 1;
 	while (*end && *end != '\n') {
 		end++;
 	}
 
-	if (end > c + 2
-	    && ispunct(*(end - 1))
-	    && isspace(*(end - 2)) && *(end - 2) != '\n') {
+	if (end > c + 2 && ispunct(*(end - 1)) && isspace(*(end - 2)) && *(end - 2) != '\n') {
 		/*
 		 * Don't format lonely punctuation E.g. in "xyz ," format the
 		 * xyz and then append the comma removing the space.
@@ -3986,14 +3885,12 @@ scan_troff_mandoc(char *c, int san, char **result)
 	return ret;
 }
 
-int
-main(int argc, char **argv)
-{
-	FILE   *f;
-	char   *t;
-	int     l, i;
-	char   *buf;
-	char   *h, *fullname;
+int main(int argc, char **argv) {
+	FILE *f;
+	char *t;
+	int l, i;
+	char *buf;
+	char *h, *fullname;
 	STRDEF *stdf;
 
 	t = NULL;

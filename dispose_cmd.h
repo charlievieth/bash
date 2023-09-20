@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_DISPOSE_CMD_H_)
+#if !defined(_DISPOSE_CMD_H_)
 #define _DISPOSE_CMD_H_
 
 #include "stdc.h"
@@ -30,7 +30,7 @@ extern void dispose_words PARAMS((WORD_LIST *));
 extern void dispose_word_array PARAMS((char **));
 extern void dispose_redirects PARAMS((REDIRECT *));
 
-#if defined (COND_COMMAND)
+#if defined(COND_COMMAND)
 extern void dispose_cond_node PARAMS((COND_COM *));
 #endif
 

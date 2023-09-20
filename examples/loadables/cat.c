@@ -32,18 +32,17 @@
 extern int errno;
 #endif
 
-extern char *strerror ();
-extern char **make_builtin_argv ();
+extern char *strerror();
+extern char **make_builtin_argv();
 
-static int
-fcopy(fd, fn)
-int	fd;
-char	*fn;
+static int fcopy(fd, fn)
+int fd;
+char *fn;
 {
-	char	buf[4096], *s;
-	int	n, w, e;
+	char buf[4096], *s;
+	int n, w, e;
 
-	while (n = read(fd, buf, sizeof (buf))) {
+	while (n = read(fd, buf, sizeof(buf))) {
 		if (n < 0) {
 			e = errno;
 			write(2, "cat: read error: ", 18);
@@ -69,13 +68,12 @@ char	*fn;
 	return 0;
 }
 
-int
-cat_main (argc, argv)
-int	argc;
-char	**argv;
+int cat_main(argc, argv)
+int argc;
+char **argv;
 {
-	int	i, fd, r;
-	char	*s;
+	int i, fd, r;
+	char *s;
 
 	if (argc == 1)
 		return (fcopy(0, "standard input"));
@@ -104,12 +102,11 @@ char	**argv;
 	return (r);
 }
 
-int
-cat_builtin(list)
+int cat_builtin(list)
 WORD_LIST *list;
 {
-	char	**v;
-	int	c, r;
+	char **v;
+	int c, r;
 
 	v = make_builtin_argv(list, &c);
 	QUIT;
@@ -119,20 +116,11 @@ WORD_LIST *list;
 	return r;
 }
 
-char *cat_doc[] = {
-	"Display files.",
-	"",
-	"Read each FILE and display it on the standard output.   If any",
-	"FILE is `-' or if no FILE argument is given, the standard input",
-	"is read.",
-	(char *)0
-};
+char *cat_doc[] = {"Display files.",
+                   "",
+                   "Read each FILE and display it on the standard output.   If any",
+                   "FILE is `-' or if no FILE argument is given, the standard input",
+                   "is read.",
+                   (char *)0};
 
-struct builtin cat_struct = {
-	"cat",
-	cat_builtin,
-	BUILTIN_ENABLED,
-	cat_doc,
-	"cat [-] [file ...]",
-	0
-};
+struct builtin cat_struct = {"cat", cat_builtin, BUILTIN_ENABLED, cat_doc, "cat [-] [file ...]", 0};

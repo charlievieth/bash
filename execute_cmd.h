@@ -18,31 +18,28 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_EXECUTE_CMD_H_)
+#if !defined(_EXECUTE_CMD_H_)
 #define _EXECUTE_CMD_H_
 
 #include "stdc.h"
 
-#if defined (ARRAY_VARS)
-struct func_array_state
-  {
-    ARRAY *funcname_a;
-    SHELL_VAR *funcname_v;
-    ARRAY *source_a;
-    SHELL_VAR *source_v;
-    ARRAY *lineno_a;
-    SHELL_VAR *lineno_v;
-  };
+#if defined(ARRAY_VARS)
+struct func_array_state {
+	ARRAY *funcname_a;
+	SHELL_VAR *funcname_v;
+	ARRAY *source_a;
+	SHELL_VAR *source_v;
+	ARRAY *lineno_a;
+	SHELL_VAR *lineno_v;
+};
 #endif
 
 /* Placeholder for later expansion to include more execution state */
 /* XXX - watch out for pid_t */
-struct execstate
-  {
-    pid_t pid;
-    int subshell_env;
-  };
-	
+struct execstate {
+	pid_t pid;
+	int subshell_env;
+};
 
 /* Variables declared in execute_cmd.c, used by many other files */
 extern int return_catch_flag;
@@ -112,11 +109,11 @@ extern void coproc_fdrestore PARAMS((struct coproc *));
 extern void coproc_setvars PARAMS((struct coproc *));
 extern void coproc_unsetvars PARAMS((struct coproc *));
 
-#if defined (PROCESS_SUBSTITUTION)
+#if defined(PROCESS_SUBSTITUTION)
 extern void close_all_files PARAMS((void));
 #endif
 
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
 extern void restore_funcarray_state PARAMS((struct func_array_state *));
 #endif
 

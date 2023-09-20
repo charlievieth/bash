@@ -64,17 +64,18 @@ static char rcsid[] = "$Id: inet_addr.c,v 1.5 1996/08/14 03:48:37 drepper Exp $"
 
 #include <config.h>
 
-#if !defined (HAVE_INET_ATON) && defined (HAVE_NETWORK) && defined (HAVE_NETINET_IN_H) && defined (HAVE_ARPA_INET_H)
+#if !defined(HAVE_INET_ATON) && defined(HAVE_NETWORK) && defined(HAVE_NETINET_IN_H) && \
+    defined(HAVE_ARPA_INET_H)
 
 #include <sys/types.h>
-#if defined (HAVE_SYS_PARAM_H)
+#if defined(HAVE_SYS_PARAM_H)
 #include <sys/param.h>
 #endif
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+#include <unistd.h>
 #endif
 
 #include <bashansi.h>
@@ -82,7 +83,7 @@ static char rcsid[] = "$Id: inet_addr.c,v 1.5 1996/08/14 03:48:37 drepper Exp $"
 #include <stdc.h>
 
 #ifndef INADDR_NONE
-#  define INADDR_NONE 0xffffffff
+#define INADDR_NONE 0xffffffff
 #endif
 
 /* these are compatibility routines, not needed on recent BSD releases */
@@ -112,10 +113,9 @@ inet_addr(cp)
  * This replaces inet_addr, the return value from which
  * cannot distinguish between failure and a local broadcast address.
  */
-int
-inet_aton(cp, addr)
-	register const char *cp;
-	struct in_addr *addr;
+int inet_aton(cp, addr)
+register const char *cp;
+struct in_addr *addr;
 {
 	register u_bits32_t val;
 	register int base, n;
@@ -133,11 +133,12 @@ inet_aton(cp, addr)
 #if 0
 		if (!isdigit(c))
 #else
-		if (c != '0' && c != '1' && c != '2' && c != '3' && c != '4' &&
-		    c != '5' && c != '6' && c != '7' && c != '8' && c != '9')
+		if (c != '0' && c != '1' && c != '2' && c != '3' && c != '4' && c != '5' && c != '6' &&
+		    c != '7' && c != '8' && c != '9')
 #endif
 			return (0);
-		val = 0; base = 10;
+		val = 0;
+		base = 10;
 		if (c == '0') {
 			c = *++cp;
 			if (c == 'x' || c == 'X')
@@ -150,8 +151,7 @@ inet_aton(cp, addr)
 				val = (val * base) + (c - '0');
 				c = *++cp;
 			} else if (base == 16 && isascii(c) && isxdigit(c)) {
-				val = (val << 4) |
-					(c + 10 - (islower(c) ? 'a' : 'A'));
+				val = (val << 4) | (c + 10 - (islower(c) ? 'a' : 'A'));
 				c = *++cp;
 			} else
 				break;
@@ -181,26 +181,25 @@ inet_aton(cp, addr)
 	 */
 	n = pp - parts + 1;
 	switch (n) {
-
 	case 0:
-		return (0);		/* initial nondigit */
+		return (0); /* initial nondigit */
 
-	case 1:				/* a -- 32 bits */
+	case 1: /* a -- 32 bits */
 		break;
 
-	case 2:				/* a.b -- 8.24 bits */
+	case 2: /* a.b -- 8.24 bits */
 		if (val > 0xffffff)
 			return (0);
 		val |= parts[0] << 24;
 		break;
 
-	case 3:				/* a.b.c -- 8.8.16 bits */
+	case 3: /* a.b.c -- 8.8.16 bits */
 		if (val > 0xffff)
 			return (0);
 		val |= (parts[0] << 24) | (parts[1] << 16);
 		break;
 
-	case 4:				/* a.b.c.d -- 8.8.8.8 bits */
+	case 4: /* a.b.c.d -- 8.8.8.8 bits */
 		if (val > 0xff)
 			return (0);
 		val |= (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8);

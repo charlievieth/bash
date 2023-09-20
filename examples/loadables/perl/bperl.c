@@ -13,17 +13,15 @@
 extern int errno;
 #endif
 
-extern char **make_builtin_argv (WORD_LIST *, int *);
+extern char **make_builtin_argv(WORD_LIST *, int *);
 extern char **export_env;
 
 extern void perl_close(void);
 extern int perl_main(int, char **, char **);
 
-int
-bperl_builtin(WORD_LIST *list)
-{
-	char	**v;
-	int	c, r;
+int bperl_builtin(WORD_LIST *list) {
+	char **v;
+	int c, r;
 
 	v = make_builtin_argv(list, &c);
 	r = perl_main(c, v, export_env);
@@ -32,22 +30,11 @@ bperl_builtin(WORD_LIST *list)
 	return r;
 }
 
-void
-bperl_builtin_unload (char *s)
-{
+void bperl_builtin_unload(char *s) {
 	perl_close();
 }
 
-char *bperl_doc[] = {
-	"An interface to a perl5 interpreter.",
-	(char *)0
-};
+char *bperl_doc[] = {"An interface to a perl5 interpreter.", (char *)0};
 
 struct builtin bperl_struct = {
-	"bperl",
-	bperl_builtin,
-	BUILTIN_ENABLED,
-	bperl_doc,
-	"bperl [perl options] [file ...]",
-	0
-};
+    "bperl", bperl_builtin, BUILTIN_ENABLED, bperl_doc, "bperl [perl options] [file ...]", 0};

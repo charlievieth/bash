@@ -27,9 +27,8 @@
 
 #include <stdio.h>
 
-main()
-{
-	register int	i;
+main() {
+	register int i;
 
 	for (i = 0; i < getdtablesize(); i++) {
 		if (fcntl(i, F_GETFD, 0) != -1)

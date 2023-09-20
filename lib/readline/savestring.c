@@ -3,7 +3,7 @@
 /* Copyright (C) 1998,2003,2017 Free Software Foundation, Inc.
 
    This file is part of the GNU Readline Library (Readline), a library
-   for reading lines of text with interactive input and history editing.      
+   for reading lines of text with interactive input and history editing.
 
    Readline is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -23,18 +23,16 @@
 
 #include <config.h>
 #ifdef HAVE_STRING_H
-#  include <string.h>
+#include <string.h>
 #endif
 #include "xmalloc.h"
 
 /* Backwards compatibility, now that savestring has been removed from
    all `public' readline header files. */
-char *
-savestring (const char *s)
-{
-  char *ret;
+char *savestring(const char *s) {
+	char *ret;
 
-  ret = (char *)xmalloc (strlen (s) + 1);
-  strcpy (ret, s);
-  return ret;
+	ret = (char *)xmalloc(strlen(s) + 1);
+	strcpy(ret, s);
+	return ret;
 }

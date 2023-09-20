@@ -18,7 +18,7 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_MAKE_CMD_H_)
+#if !defined(_MAKE_CMD_H_)
 #define _MAKE_CMD_H_
 
 #include "stdc.h"
@@ -35,7 +35,7 @@ extern WORD_DESC *make_word_from_token PARAMS((int));
 
 extern WORD_LIST *make_word_list PARAMS((WORD_DESC *, WORD_LIST *));
 
-#define add_string_to_list(s, l) make_word_list (make_word(s), (l))
+#define add_string_to_list(s, l) make_word_list(make_word(s), (l))
 
 extern COMMAND *make_command PARAMS((enum command_type, SIMPLE_COM *));
 extern COMMAND *command_connect PARAMS((COMMAND *, COMMAND *, int));
@@ -57,7 +57,7 @@ extern COMMAND *make_arith_command PARAMS((WORD_LIST *));
 
 extern COMMAND *make_select_command PARAMS((WORD_DESC *, WORD_LIST *, COMMAND *, int));
 
-#if defined (COND_COMMAND)
+#if defined(COND_COMMAND)
 extern COND_COM *make_cond_node PARAMS((int, WORD_DESC *, COND_COM *, COND_COM *));
 extern COMMAND *make_cond_command PARAMS((COND_COM *));
 #endif

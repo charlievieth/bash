@@ -38,23 +38,22 @@ extern int errno;
 
 extern int optind;
 
-#define LOWER	1
-#define UPPER	2
+#define LOWER 1
+#define UPPER 2
 
-int
-main(ac, av)
-int	ac;
-char	**av;
+int main(ac, av)
+int ac;
+char **av;
 {
-	int	c, x;
-	int	op;
-	FILE	*inf;
+	int c, x;
+	int op;
+	FILE *inf;
 
 	op = 0;
 	while ((c = getopt(ac, av, "lnu")) != EOF) {
 		switch (c) {
 		case 'n':
-			setbuf (stdout, (char *)NULL);
+			setbuf(stdout, (char *)NULL);
 			break;
 		case 'u':
 			op = UPPER;
@@ -93,6 +92,6 @@ char	**av;
 		}
 		putchar(x);
 	}
-			
+
 	exit(0);
 }

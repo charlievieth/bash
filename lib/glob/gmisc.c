@@ -3,7 +3,7 @@
    Copyright (C) 2010-2020 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne-Again SHell.
-   
+
    Bash is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -22,8 +22,8 @@
 
 #include "bashtypes.h"
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "bashansi.h"
@@ -33,7 +33,7 @@
 #include "stdc.h"
 
 #ifndef FNM_CASEFOLD
-#  include "strmatch.h"
+#include "strmatch.h"
 #endif
 #include "glob.h"
 
@@ -41,15 +41,13 @@
 extern char *glob_patscan PARAMS((char *, char *, int));
 
 /* Compile `gm_loop.c' for single-byte characters. */
-#define CHAR	char
-#define INT	int
-#define L(CS)	CS
-#define EXTGLOB_PATTERN_P extglob_pattern_p
+#define CHAR               char
+#define INT                int
+#define L(CS)              CS
+#define EXTGLOB_PATTERN_P  extglob_pattern_p
 #define MATCH_PATTERN_CHAR match_pattern_char
-#define MATCHLEN umatchlen
-#define FOLD(c) ((flags & FNM_CASEFOLD) \
-	? TOLOWER ((unsigned char)c) \
-	: ((unsigned char)c))
+#define MATCHLEN           umatchlen
+#define FOLD(c)            ((flags & FNM_CASEFOLD) ? TOLOWER((unsigned char)c) : ((unsigned char)c))
 #ifndef LPAREN
 #define LPAREN '('
 #define RPAREN ')'
@@ -59,50 +57,46 @@ extern char *glob_patscan PARAMS((char *, char *, int));
 /* Compile `gm_loop.c' again for multibyte characters. */
 #if HANDLE_MULTIBYTE
 
-#define CHAR	wchar_t
-#define INT	wint_t
-#define L(CS)	L##CS
-#define EXTGLOB_PATTERN_P wextglob_pattern_p
+#define CHAR               wchar_t
+#define INT                wint_t
+#define L(CS)              L##CS
+#define EXTGLOB_PATTERN_P  wextglob_pattern_p
 #define MATCH_PATTERN_CHAR match_pattern_wchar
-#define MATCHLEN wmatchlen
+#define MATCHLEN           wmatchlen
 
-#define FOLD(c) ((flags & FNM_CASEFOLD) && iswupper (c) ? towlower (c) : (c))
-#define LPAREN L'('
-#define RPAREN L')'
+#define FOLD(c) ((flags & FNM_CASEFOLD) && iswupper(c) ? towlower(c) : (c))
+#define LPAREN  L'('
+#define RPAREN  L')'
 #include "gm_loop.c"
 
 #endif /* HANDLE_MULTIBYTE */
 
-
-#if defined (EXTENDED_GLOB)
+#if defined(EXTENDED_GLOB)
 /* Skip characters in PAT and return the final occurrence of DIRSEP.  This
    is only called when extended_glob is set, so we have to skip over extglob
    patterns x(...) */
-char *
-glob_dirscan (pat, dirsep)
-     char *pat;
-     int dirsep;
+char *glob_dirscan(pat, dirsep)
+char *pat;
+int dirsep;
 {
-  char *p, *d, *pe, *se;
+	char *p, *d, *pe, *se;
 
-  d = pe = se = 0;
-  for (p = pat; p && *p; p++)
-    {
-      if (extglob_pattern_p (p))
-	{
-	  if (se == 0)
-	    se = p + strlen (p) - 1;
-	  pe = glob_patscan (p + 2, se, 0);
-	  if (pe == 0)
-	    continue;
-	  else if (*pe == 0)
-	    break;
-	  p = pe - 1;	/* will do increment above */
-	  continue;
+	d = pe = se = 0;
+	for (p = pat; p && *p; p++) {
+		if (extglob_pattern_p(p)) {
+			if (se == 0)
+				se = p + strlen(p) - 1;
+			pe = glob_patscan(p + 2, se, 0);
+			if (pe == 0)
+				continue;
+			else if (*pe == 0)
+				break;
+			p = pe - 1; /* will do increment above */
+			continue;
+		}
+		if (*p == dirsep)
+			d = p;
 	}
-      if (*p ==  dirsep)
-	d = p;
-    }
-  return d;
+	return d;
 }
 #endif /* EXTENDED_GLOB */

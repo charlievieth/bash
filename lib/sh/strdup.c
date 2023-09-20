@@ -3,7 +3,7 @@
 /* Copyright (C) 2013 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
-   
+
    Bash is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
@@ -25,17 +25,15 @@
 #include <stdlib.h>
 
 /* Duplicate S, returning an identical malloc'd string.  */
-char *
-strdup (s)
-     const char *s;
+char *strdup(s) const char *s;
 {
-  size_t len;
-  void *new;
+	size_t len;
+	void *new;
 
-  len = strlen (s) + 1;
-  if ((new = malloc (len)) == NULL)
-    return NULL;
+	len = strlen(s) + 1;
+	if ((new = malloc(len)) == NULL)
+		return NULL;
 
-  memcpy (new, s, len);
-  return ((char *)new);
+	memcpy(new, s, len);
+	return ((char *)new);
 }

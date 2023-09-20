@@ -46,7 +46,7 @@
 
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
+#include <unistd.h>
 #endif
 #include "bashansi.h"
 #include <maxpath.h>
@@ -58,21 +58,19 @@
 #include "common.h"
 
 #ifndef errno
-extern int	errno;
+extern int errno;
 #endif
 
-extern char	*sh_realpath();
+extern char *sh_realpath();
 
-int
-realpath_builtin(WORD_LIST *list)
-{
-	int	opt, cflag, vflag, qflag, sflag, aflag, es;
-	char	*r, realbuf[PATH_MAX], *p, *newpath;
+int realpath_builtin(WORD_LIST *list) {
+	int opt, cflag, vflag, qflag, sflag, aflag, es;
+	char *r, realbuf[PATH_MAX], *p, *newpath;
 	struct stat sb;
-#if defined (ARRAY_VARS)
-	arrayind_t	ind;
-	char	*aname;
-	SHELL_VAR	*v;
+#if defined(ARRAY_VARS)
+	arrayind_t ind;
+	char *aname;
+	SHELL_VAR *v;
 #endif
 
 	if (list == 0) {
@@ -81,15 +79,15 @@ realpath_builtin(WORD_LIST *list)
 	}
 
 	vflag = cflag = qflag = aflag = sflag = 0;
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
 	aname = NULL;
 	v = NULL;
 	ind = 0;
 #endif
 	reset_internal_getopt();
-	while ((opt = internal_getopt (list, "a:cqsv")) != -1) {
+	while ((opt = internal_getopt(list, "a:cqsv")) != -1) {
 		switch (opt) {
-#if defined (ARRAY_VARS)
+#if defined(ARRAY_VARS)
 		case 'a':
 			aflag = 1;
 			aname = list_optarg;
@@ -107,7 +105,7 @@ realpath_builtin(WORD_LIST *list)
 		case 'v':
 			vflag = 1;
 			break;
-		CASE_HELPOPT;
+			CASE_HELPOPT;
 		default:
 			builtin_usage();
 			return (EX_USAGE);
@@ -121,26 +119,26 @@ realpath_builtin(WORD_LIST *list)
 		return (EX_USAGE);
 	}
 
-#if defined (ARRAY_VARS)
-	if (aflag && legal_identifier (aname) == 0) {
+#if defined(ARRAY_VARS)
+	if (aflag && legal_identifier(aname) == 0) {
 		sh_invalidid(aname);
 		return (EXECUTION_FAILURE);
 	}
-	if (aname && builtin_unbind_variable (aname) == -2)
+	if (aname && builtin_unbind_variable(aname) == -2)
 		return (EXECUTION_FAILURE);
 	if (aname) {
-		v = find_or_make_array_variable (aname, 1);
-		if (v == 0 || readonly_p (v) || noassign_p (v)) {
-			if (v && readonly_p (v))
-				err_readonly (aname);
+		v = find_or_make_array_variable(aname, 1);
+		if (v == 0 || readonly_p(v) || noassign_p(v)) {
+			if (v && readonly_p(v))
+				err_readonly(aname);
 			return (EXECUTION_FAILURE);
-		} else if (array_p (v) == 0) {
-			builtin_error ("%s: not an indexed array", aname);
+		} else if (array_p(v) == 0) {
+			builtin_error("%s: not an indexed array", aname);
 			return (EXECUTION_FAILURE);
 		}
-		if (invisible_p (v))
-			VUNSETATTR (v, att_invisible);
-		array_flush (array_cell (v));
+		if (invisible_p(v))
+			VUNSETATTR(v, att_invisible);
+		array_flush(array_cell(v));
 	}
 #endif
 
@@ -149,7 +147,7 @@ realpath_builtin(WORD_LIST *list)
 		if (sflag) {
 			/* sh_canonpath doesn't convert to absolute pathnames */
 			newpath = make_absolute(p, get_string_value("PWD"));
-			r = sh_canonpath(newpath, PATH_CHECKDOTDOT|PATH_CHECKEXISTS);
+			r = sh_canonpath(newpath, PATH_CHECKDOTDOT | PATH_CHECKEXISTS);
 			free(newpath);
 		} else
 			r = sh_realpath(p, realbuf);
@@ -166,42 +164,41 @@ realpath_builtin(WORD_LIST *list)
 			continue;
 		}
 		if (aflag) {
-			bind_array_element (v, ind, r, 0);
+			bind_array_element(v, ind, r, 0);
 			ind++;
 		}
 		if (qflag == 0) {
 			if (vflag)
-				printf ("%s -> ", p);
+				printf("%s -> ", p);
 			printf("%s\n", r);
 		}
 		if (sflag)
-			free (r);
+			free(r);
 	}
 	return es;
 }
 
 char *realpath_doc[] = {
-	"Display pathname in canonical form.",
-	"",
-	"Display the canonicalized version of each PATHNAME argument, resolving",
-	"symbolic links.",
-	"The -a option stores each canonicalized PATHNAME argument into the indexed",
-	"array VARNAME.",
-	"The -c option checks whether or not each resolved name exists.",
-	"The -q option produces no output; the exit status determines the",
-	"validity of each PATHNAME, but any array assignment is still performed.",
-	"If the -s option is supplied, canonicalize . and .. pathname components",
-	"without resolving symbolic links.",
-	"The -v option produces verbose output.",
-	"The exit status is 0 if each PATHNAME was resolved; non-zero otherwise.",
-	(char *)NULL
-};
+    "Display pathname in canonical form.",
+    "",
+    "Display the canonicalized version of each PATHNAME argument, resolving",
+    "symbolic links.",
+    "The -a option stores each canonicalized PATHNAME argument into the indexed",
+    "array VARNAME.",
+    "The -c option checks whether or not each resolved name exists.",
+    "The -q option produces no output; the exit status determines the",
+    "validity of each PATHNAME, but any array assignment is still performed.",
+    "If the -s option is supplied, canonicalize . and .. pathname components",
+    "without resolving symbolic links.",
+    "The -v option produces verbose output.",
+    "The exit status is 0 if each PATHNAME was resolved; non-zero otherwise.",
+    (char *)NULL};
 
 struct builtin realpath_struct = {
-	"realpath",		/* builtin name */
-	realpath_builtin,	/* function implementing the builtin */
-	BUILTIN_ENABLED,	/* initial flags for builtin */
-	realpath_doc,		/* array of long documentation strings */
-	"realpath [-a varname] [-cqsv] pathname [pathname...]",	/* usage synopsis */
-	0			/* reserved for internal use */
+    "realpath",       /* builtin name */
+    realpath_builtin, /* function implementing the builtin */
+    BUILTIN_ENABLED,  /* initial flags for builtin */
+    realpath_doc,     /* array of long documentation strings */
+    "realpath [-a varname] [-cqsv] pathname [pathname...]", /* usage synopsis */
+    0                                                       /* reserved for internal use */
 };

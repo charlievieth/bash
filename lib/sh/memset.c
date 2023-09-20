@@ -18,12 +18,10 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-char *
-memset (char *str, int c, unsigned int len)
-{
-  register char *st = str;
+char *memset(char *str, int c, unsigned int len) {
+	register char *st = str;
 
-  while (len-- > 0)
-    *st++ = c;
-  return str;
+	while (len-- > 0)
+		*st++ = c;
+	return str;
 }

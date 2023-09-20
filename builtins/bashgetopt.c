@@ -20,8 +20,8 @@
 
 #include <config.h>
 
-#if defined (HAVE_UNISTD_H)
-#  include <unistd.h>
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
 #endif
 
 #include "../bashansi.h"
@@ -33,29 +33,28 @@
 
 #include "bashgetopt.h"
 
-#define ISOPT(s)	(((*(s) == '-') || (plus && *(s) == '+')) && (s)[1])
-#define NOTOPT(s)	(((*(s) != '-') && (!plus || *(s) != '+')) || (s)[1] == '\0')
-			
-static int	sp;
+#define ISOPT(s)  (((*(s) == '-') || (plus && *(s) == '+')) && (s)[1])
+#define NOTOPT(s) (((*(s) != '-') && (!plus || *(s) != '+')) || (s)[1] == '\0')
 
-char    *list_optarg;
-int	list_optflags;
-int	list_optopt;
-int	list_opttype;
+static int sp;
+
+char *list_optarg;
+int list_optflags;
+int list_optopt;
+int list_opttype;
 
 static WORD_LIST *lhead = (WORD_LIST *)NULL;
-WORD_LIST	*lcurrent = (WORD_LIST *)NULL;
-WORD_LIST	*loptend;	/* Points to the first non-option argument in the list */
+WORD_LIST *lcurrent = (WORD_LIST *)NULL;
+WORD_LIST *loptend; /* Points to the first non-option argument in the list */
 
-int
-internal_getopt(list, opts)
-WORD_LIST	*list;
-char		*opts;
+int internal_getopt(list, opts)
+WORD_LIST *list;
+char *opts;
 {
 	register int c;
 	register char *cp;
-	int	plus;	/* nonzero means to handle +option */
-	static char errstr[3] = { '-', '\0', '\0' };
+	int plus; /* nonzero means to handle +option */
+	static char errstr[3] = {'-', '\0', '\0'};
 
 	plus = *opts == '+';
 	if (plus)
@@ -64,7 +63,7 @@ char		*opts;
 	if (list == 0) {
 		list_optarg = (char *)NULL;
 		list_optflags = 0;
-		loptend = (WORD_LIST *)NULL;	/* No non-option arguments */
+		loptend = (WORD_LIST *)NULL; /* No non-option arguments */
 		return -1;
 	}
 
@@ -77,19 +76,18 @@ char		*opts;
 
 	if (sp == 1) {
 		if (lcurrent == 0 || NOTOPT(lcurrent->word->word)) {
-		    	lhead = (WORD_LIST *)NULL;
-		    	loptend = lcurrent;
-			return(-1);
-		} else if (ISHELP (lcurrent->word->word)) {
+			lhead = (WORD_LIST *)NULL;
+			loptend = lcurrent;
+			return (-1);
+		} else if (ISHELP(lcurrent->word->word)) {
 			lhead = (WORD_LIST *)NULL;
 			loptend = lcurrent;
 			return (GETOPT_HELP);
-		} else if (lcurrent->word->word[0] == '-' &&
-			   lcurrent->word->word[1] == '-' &&
-			   lcurrent->word->word[2] == 0) {
+		} else if (lcurrent->word->word[0] == '-' && lcurrent->word->word[1] == '-' &&
+		           lcurrent->word->word[2] == 0) {
 			lhead = (WORD_LIST *)NULL;
 			loptend = lcurrent->next;
-			return(-1);
+			return (-1);
 		}
 		errstr[0] = list_opttype = lcurrent->word->word[0];
 	}
@@ -98,7 +96,7 @@ char		*opts;
 
 	if (c == ':' || (cp = strchr(opts, c)) == NULL) {
 		errstr[1] = c;
-		sh_invalidopt (errstr);		
+		sh_invalidopt(errstr);
 		if (lcurrent->word->word[++sp] == '\0') {
 			lcurrent = lcurrent->next;
 			sp = 1;
@@ -107,19 +105,19 @@ char		*opts;
 		list_optflags = 0;
 		if (lcurrent)
 			loptend = lcurrent->next;
-		return('?');
+		return ('?');
 	}
 
 	if (*++cp == ':' || *cp == ';') {
 		/* `:': Option requires an argument. */
 		/* `;': option argument may be missing */
 		/* We allow -l2 as equivalent to -l 2 */
-		if (lcurrent->word->word[sp+1]) {
+		if (lcurrent->word->word[sp + 1]) {
 			list_optarg = lcurrent->word->word + sp + 1;
 			list_optflags = 0;
 			lcurrent = lcurrent->next;
-		/* If the specifier is `;', don't set optarg if the next
-		   argument looks like another option. */
+			/* If the specifier is `;', don't set optarg if the next
+			   argument looks like another option. */
 #if 0
 		} else if (lcurrent->next && (*cp == ':' || lcurrent->next->word->word[0] != '-')) {
 #else
@@ -133,19 +131,19 @@ char		*opts;
 			list_optarg = (char *)NULL;
 			list_optflags = 0;
 			lcurrent = lcurrent->next;
-		} else {	/* lcurrent->next == NULL */
+		} else { /* lcurrent->next == NULL */
 			errstr[1] = c;
-			sh_needarg (errstr);
+			sh_needarg(errstr);
 			sp = 1;
 			list_optarg = (char *)NULL;
 			list_optflags = 0;
-			return('?');
+			return ('?');
 		}
 		sp = 1;
 	} else if (*cp == '#') {
 		/* option requires a numeric argument */
-		if (lcurrent->word->word[sp+1]) {
-			if (DIGIT(lcurrent->word->word[sp+1])) {
+		if (lcurrent->word->word[sp + 1]) {
+			if (DIGIT(lcurrent->word->word[sp + 1])) {
 				list_optarg = lcurrent->word->word + sp + 1;
 				list_optflags = 0;
 				lcurrent = lcurrent->next;
@@ -161,7 +159,7 @@ char		*opts;
 				lcurrent = lcurrent->next;
 			} else {
 				errstr[1] = c;
-				sh_neednumarg (errstr);
+				sh_neednumarg(errstr);
 				sp = 1;
 				list_optarg = (char *)NULL;
 				list_optflags = 0;
@@ -179,16 +177,14 @@ char		*opts;
 		list_optflags = 0;
 	}
 
-	return(c);
+	return (c);
 }
 
 /*
  * reset_internal_getopt -- force the in[ft]ernal getopt to reset
  */
 
-void
-reset_internal_getopt ()
-{
+void reset_internal_getopt() {
 	lhead = lcurrent = loptend = (WORD_LIST *)NULL;
 	sp = 1;
 }

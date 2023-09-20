@@ -18,30 +18,30 @@
    along with Bash.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if !defined (_BASHHIST_H_)
+#if !defined(_BASHHIST_H_)
 #define _BASHHIST_H_
 
 #include "stdc.h"
 
 /* Flag values for history_control */
-#define HC_IGNSPACE	0x01
-#define HC_IGNDUPS	0x02
-#define HC_ERASEDUPS	0x04
+#define HC_IGNSPACE  0x01
+#define HC_IGNDUPS   0x02
+#define HC_ERASEDUPS 0x04
 
-#define HC_IGNBOTH	(HC_IGNSPACE|HC_IGNDUPS)
+#define HC_IGNBOTH (HC_IGNSPACE | HC_IGNDUPS)
 
-#if defined (STRICT_POSIX)
-#  undef HISTEXPAND_DEFAULT
-#  define HISTEXPAND_DEFAULT	0
+#if defined(STRICT_POSIX)
+#undef HISTEXPAND_DEFAULT
+#define HISTEXPAND_DEFAULT 0
 #else
-#  if !defined (HISTEXPAND_DEFAULT)
-#    define HISTEXPAND_DEFAULT	1
-#  endif /* !HISTEXPAND_DEFAULT */
+#if !defined(HISTEXPAND_DEFAULT)
+#define HISTEXPAND_DEFAULT 1
+#endif /* !HISTEXPAND_DEFAULT */
 #endif
 
 extern int remember_on_history;
-extern int enable_history_list;		/* value for `set -o history' */
-extern int literal_history;		/* controlled by `shopt lithist' */
+extern int enable_history_list; /* value for `set -o history' */
+extern int literal_history;     /* controlled by `shopt lithist' */
 extern int force_append_history;
 extern int history_lines_this_session;
 extern int history_lines_in_file;
@@ -55,14 +55,14 @@ extern int hist_last_line_pushed;
 
 extern int dont_save_function_defs;
 
-#  if defined (READLINE)
+#if defined(READLINE)
 extern int hist_verify;
-#  endif
+#endif
 
-#  if defined (BANG_HISTORY)
+#if defined(BANG_HISTORY)
 extern int history_expansion_inhibited;
 extern int double_quotes_inhibit_history_expansion;
-#  endif /* BANG_HISTORY */
+#endif /* BANG_HISTORY */
 
 extern void bash_initialize_history PARAMS((void));
 extern void bash_history_reinit PARAMS((int));

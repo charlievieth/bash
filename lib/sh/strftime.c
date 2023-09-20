@@ -70,20 +70,20 @@
 #include <string.h>
 
 /* defaults: season to taste */
-#define SUNOS_EXT	1	/* stuff in SunOS strftime routine */
-#define VMS_EXT		1	/* include %v for VMS date format */
-#define HPUX_EXT	1	/* non-conflicting stuff in HP-UX date */
-#define POSIX_SEMANTICS	1	/* call tzset() if TZ changes */
-#define POSIX_2008	1	/* flag and fw for C, F, G, Y formats */
+#define SUNOS_EXT       1 /* stuff in SunOS strftime routine */
+#define VMS_EXT         1 /* include %v for VMS date format */
+#define HPUX_EXT        1 /* non-conflicting stuff in HP-UX date */
+#define POSIX_SEMANTICS 1 /* call tzset() if TZ changes */
+#define POSIX_2008      1 /* flag and fw for C, F, G, Y formats */
 
-#undef strchr	/* avoid AIX weirdness */
+#undef strchr /* avoid AIX weirdness */
 
-#if !defined (errno)
+#if !defined(errno)
 extern int errno;
 #endif
 
-#if defined (SHELL)
-extern char *get_string_value (const char *);
+#if defined(SHELL)
+extern char *get_string_value(const char *);
 #endif
 
 extern void tzset(void);
@@ -92,62 +92,56 @@ static int iso8601wknum(const struct tm *timeptr);
 
 #ifndef inline
 #ifdef __GNUC__
-#define inline	__inline__
+#define inline __inline__
 #else
-#define inline	/**/
+#define inline /**/
 #endif
 #endif
 
-#define range(low, item, hi)	max(low, min(item, hi))
+#define range(low, item, hi) max(low, min(item, hi))
 
 /* Whew! This stuff is a mess. */
 #if !defined(OS2) && !defined(MSDOS) && !defined(__CYGWIN__) && defined(HAVE_TZNAME)
 extern char *tzname[2];
 extern int daylight;
-#if defined(SOLARIS) || defined(mips) || defined (M_UNIX)
+#if defined(SOLARIS) || defined(mips) || defined(M_UNIX)
 extern long int timezone, altzone;
 #else
-#  if defined (HPUX) || defined(__hpux)
+#if defined(HPUX) || defined(__hpux)
 extern long int timezone;
-#  else
-#    if !defined(__CYGWIN__)
+#else
+#if !defined(__CYGWIN__)
 extern int timezone, altzone;
-#    endif
-#  endif
+#endif
+#endif
 #endif
 #endif
 
-#undef min	/* just in case */
+#undef min /* just in case */
 
 /* min --- return minimum of two numbers */
 
-static inline int
-min(int a, int b)
-{
+static inline int min(int a, int b) {
 	return (a < b ? a : b);
 }
 
-#undef max	/* also, just in case */
+#undef max /* also, just in case */
 
 /* max --- return maximum of two numbers */
 
-static inline int
-max(int a, int b)
-{
+static inline int max(int a, int b) {
 	return (a > b ? a : b);
 }
 
 #ifdef POSIX_2008
 /* iso_8601_2000_year --- format a year per ISO 8601:2000 as in 1003.1 */
 
-static void
-iso_8601_2000_year(char *buf, int year, size_t fw)
-{
+static void iso_8601_2000_year(char *buf, int year, size_t fw) {
 	int extra;
 	char sign = '\0';
 
 	if (year >= -9999 && year <= 9999) {
-		sprintf(buf, "%0*d", (int) fw, year);
+		sprintf(buf, "%0*d", (int)fw, year);
 		return;
 	}
 
@@ -167,9 +161,7 @@ iso_8601_2000_year(char *buf, int year, size_t fw)
 
 /* strftime --- produce formatted time */
 
-size_t
-strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
-{
+size_t strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr) {
 	char *endp = s + maxsize;
 	char *start = s;
 	auto char tbuf[100];
@@ -201,23 +193,22 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 
 	/* various tables, useful in North America */
 	static const char *days_a[] = {
-		"Sun", "Mon", "Tue", "Wed",
-		"Thu", "Fri", "Sat",
+	    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
 	};
 	static const char *days_l[] = {
-		"Sunday", "Monday", "Tuesday", "Wednesday",
-		"Thursday", "Friday", "Saturday",
+	    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
 	};
 	static const char *months_a[] = {
-		"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+	    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 	};
 	static const char *months_l[] = {
-		"January", "February", "March", "April",
-		"May", "June", "July", "August", "September",
-		"October", "November", "December",
+	    "January", "February", "March",     "April",   "May",      "June",
+	    "July",    "August",   "September", "October", "November", "December",
 	};
-	static const char *ampm[] = { "AM", "PM", };
+	static const char *ampm[] = {
+	    "AM",
+	    "PM",
+	};
 
 	oerrno = errno;
 
@@ -233,9 +224,9 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 		tzset();
 		first = 0;
 	}
-#else	/* POSIX_SEMANTICS */
-#if defined (SHELL)
-	tz = get_string_value ("TZ");
+#else /* POSIX_SEMANTICS */
+#if defined(SHELL)
+	tz = get_string_value("TZ");
 #else
 	tz = getenv("TZ");
 #endif
@@ -243,7 +234,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 		if (tz != NULL) {
 			int tzlen = strlen(tz);
 
-			savetz = (char *) malloc(tzlen + 1);
+			savetz = (char *)malloc(tzlen + 1);
 			if (savetz != NULL) {
 				savetzlen = tzlen + 1;
 				strcpy(savetz, tz);
@@ -256,7 +247,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 	if (tz && savetz && (tz[0] != savetz[0] || strcmp(tz, savetz) != 0)) {
 		i = strlen(tz) + 1;
 		if (i > savetzlen) {
-			savetz = (char *) realloc(savetz, i);
+			savetz = (char *)realloc(savetz, i);
 			if (savetz) {
 				savetzlen = i;
 				strcpy(savetz, tz);
@@ -265,7 +256,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 			strcpy(savetz, tz);
 		tzset();
 	}
-#endif	/* POSIX_SEMANTICS */
+#endif /* POSIX_SEMANTICS */
 
 	for (; *format && s < endp - 1; format++) {
 		tbuf[0] = '\0';
@@ -317,21 +308,21 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 			*s++ = '%';
 			continue;
 
-		case 'a':	/* abbreviated weekday name */
+		case 'a': /* abbreviated weekday name */
 			if (timeptr->tm_wday < 0 || timeptr->tm_wday > 6)
 				strcpy(tbuf, "?");
 			else
 				strcpy(tbuf, days_a[timeptr->tm_wday]);
 			break;
 
-		case 'A':	/* full weekday name */
+		case 'A': /* full weekday name */
 			if (timeptr->tm_wday < 0 || timeptr->tm_wday > 6)
 				strcpy(tbuf, "?");
 			else
 				strcpy(tbuf, days_l[timeptr->tm_wday]);
 			break;
 
-		case 'b':	/* abbreviated month name */
+		case 'b': /* abbreviated month name */
 		short_month:
 			if (timeptr->tm_mon < 0 || timeptr->tm_mon > 11)
 				strcpy(tbuf, "?");
@@ -339,14 +330,14 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 				strcpy(tbuf, months_a[timeptr->tm_mon]);
 			break;
 
-		case 'B':	/* full month name */
+		case 'B': /* full month name */
 			if (timeptr->tm_mon < 0 || timeptr->tm_mon > 11)
 				strcpy(tbuf, "?");
 			else
 				strcpy(tbuf, months_l[timeptr->tm_mon]);
 			break;
 
-		case 'c':	/* appropriate date and time representation */
+		case 'c': /* appropriate date and time representation */
 			/*
 			 * This used to be:
 			 *
@@ -363,26 +354,23 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 				size_t min_fw = (flag ? 3 : 2);
 
 				fw = max(fw, min_fw);
-				sprintf(tbuf, flag
-						? "%+0*ld"
-						: "%0*ld", (int) fw,
-						(timeptr->tm_year + 1900L) / 100);
+				sprintf(tbuf, flag ? "%+0*ld" : "%0*ld", (int)fw, (timeptr->tm_year + 1900L) / 100);
 			} else
 #endif /* POSIX_2008 */
-		century:
+			century:
 				sprintf(tbuf, "%02ld", (timeptr->tm_year + 1900L) / 100);
 			break;
 
-		case 'd':	/* day of the month, 01 - 31 */
+		case 'd': /* day of the month, 01 - 31 */
 			i = range(1, timeptr->tm_mday, 31);
 			sprintf(tbuf, "%02d", i);
 			break;
 
-		case 'D':	/* date as %m/%d/%y */
+		case 'D': /* date as %m/%d/%y */
 			strftime(tbuf, sizeof tbuf, "%m/%d/%y", timeptr);
 			break;
 
-		case 'e':	/* day of month, blank padded */
+		case 'e': /* day of month, blank padded */
 			sprintf(tbuf, "%2d", range(1, timeptr->tm_mday, 31));
 			break;
 
@@ -390,7 +378,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 			/* POSIX (now C99) locale extensions, ignored for now */
 			goto again;
 
-		case 'F':	/* ISO 8601 date representation */
+		case 'F': /* ISO 8601 date representation */
 		{
 #ifdef POSIX_2008
 			/*
@@ -407,15 +395,14 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 				fw = min_fw;
 			}
 
-			fw -= 6;	/* -XX-XX at end are invariant */
+			fw -= 6; /* -XX-XX at end are invariant */
 
 			iso_8601_2000_year(tbuf, timeptr->tm_year + 1900, fw);
 			strcat(tbuf, m_d);
 #else
 			strftime(tbuf, sizeof tbuf, "%Y-%m-%d", timeptr);
 #endif /* POSIX_2008 */
-		}
-			break;
+		} break;
 
 		case 'g':
 		case 'G':
@@ -442,27 +429,23 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 					size_t min_fw = 4;
 
 					fw = max(fw, min_fw);
-					sprintf(tbuf, flag
-							? "%+0*ld"
-							: "%0*ld", (int) fw,
-							y);
+					sprintf(tbuf, flag ? "%+0*ld" : "%0*ld", (int)fw, y);
 				} else
 #endif /* POSIX_2008 */
 					sprintf(tbuf, "%ld", y);
-			}
-			else
+			} else
 				sprintf(tbuf, "%02ld", y % 100);
 			break;
 
-		case 'h':	/* abbreviated month name */
+		case 'h': /* abbreviated month name */
 			goto short_month;
 
-		case 'H':	/* hour, 24-hour clock, 00 - 23 */
+		case 'H': /* hour, 24-hour clock, 00 - 23 */
 			i = range(0, timeptr->tm_hour, 23);
 			sprintf(tbuf, "%02d", i);
 			break;
 
-		case 'I':	/* hour, 12-hour clock, 01 - 12 */
+		case 'I': /* hour, 12-hour clock, 01 - 12 */
 			i = range(0, timeptr->tm_hour, 23);
 			if (i == 0)
 				i = 12;
@@ -471,21 +454,21 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 			sprintf(tbuf, "%02d", i);
 			break;
 
-		case 'j':	/* day of the year, 001 - 366 */
+		case 'j': /* day of the year, 001 - 366 */
 			sprintf(tbuf, "%03d", timeptr->tm_yday + 1);
 			break;
 
-		case 'm':	/* month, 01 - 12 */
+		case 'm': /* month, 01 - 12 */
 			i = range(0, timeptr->tm_mon, 11);
 			sprintf(tbuf, "%02d", i + 1);
 			break;
 
-		case 'M':	/* minute, 00 - 59 */
+		case 'M': /* minute, 00 - 59 */
 			i = range(0, timeptr->tm_min, 59);
 			sprintf(tbuf, "%02d", i);
 			break;
 
-		case 'n':	/* same as \n */
+		case 'n': /* same as \n */
 			tbuf[0] = '\n';
 			tbuf[1] = '\0';
 			break;
@@ -494,7 +477,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 			/* POSIX (now C99) locale extensions, ignored for now */
 			goto again;
 
-		case 'p':	/* am or pm based on 12-hour clock */
+		case 'p': /* am or pm based on 12-hour clock */
 			i = range(0, timeptr->tm_hour, 23);
 			if (i < 12)
 				strcpy(tbuf, ampm[0]);
@@ -502,96 +485,92 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 				strcpy(tbuf, ampm[1]);
 			break;
 
-		case 'r':	/* time as %I:%M:%S %p */
+		case 'r': /* time as %I:%M:%S %p */
 			strftime(tbuf, sizeof tbuf, "%I:%M:%S %p", timeptr);
 			break;
 
-		case 'R':	/* time as %H:%M */
+		case 'R': /* time as %H:%M */
 			strftime(tbuf, sizeof tbuf, "%H:%M", timeptr);
 			break;
 
 #if defined(HAVE_MKTIME)
-		case 's':	/* time as seconds since the Epoch */
+		case 's': /* time as seconds since the Epoch */
 		{
 			struct tm non_const_timeptr;
 
 			non_const_timeptr = *timeptr;
-			sprintf(tbuf, "%ld", mktime(& non_const_timeptr));
+			sprintf(tbuf, "%ld", mktime(&non_const_timeptr));
 			break;
 		}
 #endif /* defined(HAVE_MKTIME) */
 
-		case 'S':	/* second, 00 - 60 */
+		case 'S': /* second, 00 - 60 */
 			i = range(0, timeptr->tm_sec, 60);
 			sprintf(tbuf, "%02d", i);
 			break;
 
-		case 't':	/* same as \t */
+		case 't': /* same as \t */
 			tbuf[0] = '\t';
 			tbuf[1] = '\0';
 			break;
 
-		case 'T':	/* time as %H:%M:%S */
+		case 'T': /* time as %H:%M:%S */
 		the_time:
 			strftime(tbuf, sizeof tbuf, "%H:%M:%S", timeptr);
 			break;
 
 		case 'u':
-		/* ISO 8601: Weekday as a decimal number [1 (Monday) - 7] */
-			sprintf(tbuf, "%d", timeptr->tm_wday == 0 ? 7 :
-					timeptr->tm_wday);
+			/* ISO 8601: Weekday as a decimal number [1 (Monday) - 7] */
+			sprintf(tbuf, "%d", timeptr->tm_wday == 0 ? 7 : timeptr->tm_wday);
 			break;
 
-		case 'U':	/* week of year, Sunday is first day of week */
+		case 'U': /* week of year, Sunday is first day of week */
 			sprintf(tbuf, "%02d", weeknumber(timeptr, 0));
 			break;
 
-		case 'V':	/* week of year according ISO 8601 */
+		case 'V': /* week of year according ISO 8601 */
 			sprintf(tbuf, "%02d", iso8601wknum(timeptr));
 			break;
 
-		case 'w':	/* weekday, Sunday == 0, 0 - 6 */
+		case 'w': /* weekday, Sunday == 0, 0 - 6 */
 			i = range(0, timeptr->tm_wday, 6);
 			sprintf(tbuf, "%d", i);
 			break;
 
-		case 'W':	/* week of year, Monday is first day of week */
+		case 'W': /* week of year, Monday is first day of week */
 			sprintf(tbuf, "%02d", weeknumber(timeptr, 1));
 			break;
 
-		case 'x':	/* appropriate date representation */
+		case 'x': /* appropriate date representation */
 			strftime(tbuf, sizeof tbuf, "%A %B %d %Y", timeptr);
 			break;
 
-		case 'X':	/* appropriate time representation */
+		case 'X': /* appropriate time representation */
 			goto the_time;
 			break;
 
-		case 'y':	/* year without a century, 00 - 99 */
+		case 'y': /* year without a century, 00 - 99 */
 		year:
 			i = timeptr->tm_year % 100;
 			sprintf(tbuf, "%02d", i);
 			break;
 
-		case 'Y':	/* year with century */
+		case 'Y': /* year with century */
 #ifdef POSIX_2008
 			if (pad != '\0' && fw > 0) {
 				size_t min_fw = 4;
 
 				fw = max(fw, min_fw);
-				sprintf(tbuf, flag
-						? "%+0*ld"
-						: "%0*ld", (int) fw,
-						1900L + timeptr->tm_year);
+				sprintf(tbuf, flag ? "%+0*ld" : "%0*ld", (int)fw, 1900L + timeptr->tm_year);
 			} else
 #endif /* POSIX_2008 */
-			sprintf(tbuf, "%ld", 1900L + timeptr->tm_year);
+				sprintf(tbuf, "%ld", 1900L + timeptr->tm_year);
 			break;
 
 		/*
 		 * From: Chip Rosenthal <chip@chinacat.unicom.com>
 		 * Date: Sun, 19 Mar 1995 00:33:29 -0600 (CST)
-		 * 
+		 *
 		 * Warning: the %z [code] is implemented by inspecting the
 		 * timezone name conditional compile settings, and
 		 * inferring a method to get timezone offsets. I've tried
@@ -603,9 +582,9 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 		 * live without, but it would be a great help to those of
 		 * us that muck around with various message processors.
 		 */
- 		case 'z':	/* time zone offset east of GMT e.g. -0600 */
- 			if (timeptr->tm_isdst < 0)
- 				break;
+		case 'z': /* time zone offset east of GMT e.g. -0600 */
+			if (timeptr->tm_isdst < 0)
+				break;
 #ifdef HAVE_TM_NAME
 			/*
 			 * Systems with tm_name probably have tm_tzadj as
@@ -621,18 +600,18 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 			off = timeptr->tm_gmtoff / 60;
 #else /* !HAVE_TM_ZONE */
 #if HAVE_TZNAME
-			/*
-			 * Systems with tzname[] probably have timezone as
-			 * secs west of GMT.  Convert to mins east of GMT.
-			 */
-#  if defined(__hpux) || defined (HPUX) || defined(__CYGWIN__)
+				/*
+				 * Systems with tzname[] probably have timezone as
+				 * secs west of GMT.  Convert to mins east of GMT.
+				 */
+#if defined(__hpux) || defined(HPUX) || defined(__CYGWIN__)
 			off = -timezone / 60;
-#  else
+#else
 			/* ADR: 4 August 2001, fixed this per gazelle@interaccess.com */
 			off = -(daylight ? altzone : timezone) / 60;
-#  endif
-#else /* !HAVE_TZNAME */
-			gettimeofday(& tv, & zone);
+#endif
+#else  /* !HAVE_TZNAME */
+			gettimeofday(&tv, &zone);
 			off = -zone.tz_minuteswest;
 #endif /* !HAVE_TZNAME */
 #endif /* !HAVE_TM_ZONE */
@@ -643,10 +622,10 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 			} else {
 				tbuf[0] = '+';
 			}
-			sprintf(tbuf+1, "%02ld%02ld", off/60, off%60);
+			sprintf(tbuf + 1, "%02ld%02ld", off / 60, off % 60);
 			break;
 
-		case 'Z':	/* time zone name or abbreviation */
+		case 'Z': /* time zone name or abbreviation */
 #ifdef HAVE_TZNAME
 			i = (daylight && timeptr->tm_isdst > 0); /* 0 or 1 */
 			strcpy(tbuf, tzname[i]);
@@ -657,20 +636,19 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 #ifdef HAVE_TM_NAME
 			strcpy(tbuf, timeptr->tm_name);
 #else
-			gettimeofday(& tv, & zone);
-			strcpy(tbuf, timezone(zone.tz_minuteswest,
-						timeptr->tm_isdst > 0));
+			gettimeofday(&tv, &zone);
+			strcpy(tbuf, timezone(zone.tz_minuteswest, timeptr->tm_isdst > 0));
 #endif /* HAVE_TM_NAME */
 #endif /* HAVE_TM_ZONE */
 #endif /* HAVE_TZNAME */
 			break;
 
 #ifdef SUNOS_EXT
-		case 'k':	/* hour, 24-hour clock, blank pad */
+		case 'k': /* hour, 24-hour clock, blank pad */
 			sprintf(tbuf, "%2d", range(0, timeptr->tm_hour, 23));
 			break;
 
-		case 'l':	/* hour, 12-hour clock, 1 - 12, blank pad */
+		case 'l': /* hour, 12-hour clock, 1 - 12, blank pad */
 			i = range(0, timeptr->tm_hour, 23);
 			if (i == 0)
 				i = 12;
@@ -681,21 +659,18 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *timeptr)
 #endif
 
 #ifdef HPUX_EXT
-		case 'N':	/* Emperor/Era name */
+		case 'N': /* Emperor/Era name */
 			/* this is essentially the same as the century */
-			goto century;	/* %C */
+			goto century; /* %C */
 
-		case 'o':	/* Emperor/Era year */
-			goto year;	/* %y */
-#endif /* HPUX_EXT */
-
+		case 'o':      /* Emperor/Era year */
+			goto year; /* %y */
+#endif                 /* HPUX_EXT */
 
 #ifdef VMS_EXT
-		case 'v':	/* date as dd-bbb-YYYY */
-			sprintf(tbuf, "%2d-%3.3s-%4ld",
-				range(1, timeptr->tm_mday, 31),
-				months_a[range(0, timeptr->tm_mon, 11)],
-				timeptr->tm_year + 1900L);
+		case 'v': /* date as dd-bbb-YYYY */
+			sprintf(tbuf, "%2d-%3.3s-%4ld", range(1, timeptr->tm_mday, 31),
+			        months_a[range(0, timeptr->tm_mon, 11)], timeptr->tm_year + 1900L);
 			for (i = 3; i < 6; i++)
 				if (islower(tbuf[i]))
 					tbuf[i] = toupper(tbuf[i]);
@@ -729,18 +704,13 @@ out:
 
 /* isleap --- is a year a leap year? */
 
-static int
-isleap(long year)
-{
+static int isleap(long year) {
 	return ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0);
 }
 
-
 /* iso8601wknum --- compute week number according to ISO 8601 */
 
-static int
-iso8601wknum(const struct tm *timeptr)
-{
+static int iso8601wknum(const struct tm *timeptr) {
 	/*
 	 * From 1003.2:
 	 *	If the week (Monday to Sunday) containing January 1
@@ -772,7 +742,7 @@ iso8601wknum(const struct tm *timeptr)
 	 * and that
 	 * 	timeptr->tm_wday MOD 7 == timeptr->tm_wday
 	 * from which it follows that. . .
- 	 */
+	 */
 	jan1day = timeptr->tm_wday - (timeptr->tm_yday % 7);
 	if (jan1day < 0)
 		jan1day += 7;
@@ -791,30 +761,30 @@ iso8601wknum(const struct tm *timeptr)
 	 * OK, but if it is 0, it needs to be 52 or 53.
 	 */
 	switch (jan1day) {
-	case 1:		/* Monday */
+	case 1: /* Monday */
 		break;
-	case 2:		/* Tuesday */
-	case 3:		/* Wednesday */
-	case 4:		/* Thursday */
+	case 2: /* Tuesday */
+	case 3: /* Wednesday */
+	case 4: /* Thursday */
 		weeknum++;
 		break;
-	case 5:		/* Friday */
-	case 6:		/* Saturday */
-	case 0:		/* Sunday */
+	case 5: /* Friday */
+	case 6: /* Saturday */
+	case 0: /* Sunday */
 		if (weeknum == 0) {
 #ifdef USE_BROKEN_XPG4
 			/* XPG4 (as of March 1994) says 53 unconditionally */
 			weeknum = 53;
 #else
 			/* get week number of last week of last year */
-			struct tm dec31ly;	/* 12/31 last year */
+			struct tm dec31ly; /* 12/31 last year */
 			dec31ly = *timeptr;
 			dec31ly.tm_year--;
 			dec31ly.tm_mon = 11;
 			dec31ly.tm_mday = 31;
 			dec31ly.tm_wday = (jan1day == 0) ? 6 : jan1day - 1;
 			dec31ly.tm_yday = 364 + isleap(dec31ly.tm_year + 1900L);
-			weeknum = iso8601wknum(& dec31ly);
+			weeknum = iso8601wknum(&dec31ly);
 #endif
 		}
 		break;
@@ -836,9 +806,8 @@ iso8601wknum(const struct tm *timeptr)
 
 		wday = timeptr->tm_wday;
 		mday = timeptr->tm_mday;
-		if (   (wday == 1 && (mday >= 29 && mday <= 31))
-		    || (wday == 2 && (mday == 30 || mday == 31))
-		    || (wday == 3 &&  mday == 31))
+		if ((wday == 1 && (mday >= 29 && mday <= 31)) ||
+		    (wday == 2 && (mday == 30 || mday == 31)) || (wday == 3 && mday == 31))
 			weeknum = 1;
 	}
 
@@ -849,14 +818,12 @@ iso8601wknum(const struct tm *timeptr)
 
 /* With thanks and tip of the hatlo to ado@elsie.nci.nih.gov */
 
-static int
-weeknumber(const struct tm *timeptr, int firstweekday)
-{
+static int weeknumber(const struct tm *timeptr, int firstweekday) {
 	int wday = timeptr->tm_wday;
 	int ret;
 
 	if (firstweekday == 1) {
-		if (wday == 0)	/* sunday */
+		if (wday == 0) /* sunday */
 			wday = 6;
 		else
 			wday--;
@@ -893,7 +860,7 @@ How nicer it depends on a compiler, of course, but always a tiny bit.
    ntomczak@vm.ucs.ualberta.ca
 #endif
 
-#ifdef	TEST_STRFTIME
+#ifdef TEST_STRFTIME
 
 /*
  * NAME:
@@ -923,65 +890,61 @@ How nicer it depends on a compiler, of course, but always a tiny bit.
 /* ADR: I reformatted this to my liking, and deleted some unneeded code. */
 
 #ifndef NULL
-#include	<stdio.h>
+#include <stdio.h>
 #endif
-#include	<sys/time.h>
-#include	<string.h>
+#include <sys/time.h>
+#include <string.h>
 
-#define		MAXTIME		132
+#define MAXTIME 132
 
 /*
  * Array of time formats.
  */
 
-static char *array[] =
-{
-	"(%%A)      full weekday name, var length (Sunday..Saturday)  %A",
-	"(%%B)       full month name, var length (January..December)  %B",
-	"(%%C)                                               Century  %C",
-	"(%%D)                                       date (%%m/%%d/%%y)  %D",
-	"(%%E)                           Locale extensions (ignored)  %E",
-	"(%%F)       full month name, var length (January..December)  %F",
-	"(%%H)                          hour (24-hour clock, 00..23)  %H",
-	"(%%I)                          hour (12-hour clock, 01..12)  %I",
-	"(%%M)                                       minute (00..59)  %M",
-	"(%%N)                                      Emperor/Era Name  %N",
-	"(%%O)                           Locale extensions (ignored)  %O",
-	"(%%R)                                 time, 24-hour (%%H:%%M)  %R",
-	"(%%S)                                       second (00..60)  %S",
-	"(%%T)                              time, 24-hour (%%H:%%M:%%S)  %T",
-	"(%%U)    week of year, Sunday as first day of week (00..53)  %U",
-	"(%%V)                    week of year according to ISO 8601  %V",
-	"(%%W)    week of year, Monday as first day of week (00..53)  %W",
-	"(%%X)     appropriate locale time representation (%H:%M:%S)  %X",
-	"(%%Y)                           year with century (1970...)  %Y",
-	"(%%Z) timezone (EDT), or blank if timezone not determinable  %Z",
-	"(%%a)          locale's abbreviated weekday name (Sun..Sat)  %a",
-	"(%%b)            locale's abbreviated month name (Jan..Dec)  %b",
-	"(%%c)           full date (Sat Nov  4 12:02:33 1989)%n%t%t%t  %c",
-	"(%%d)                             day of the month (01..31)  %d",
-	"(%%e)               day of the month, blank-padded ( 1..31)  %e",
-	"(%%h)                                should be same as (%%b)  %h",
-	"(%%j)                            day of the year (001..366)  %j",
-	"(%%k)               hour, 24-hour clock, blank pad ( 0..23)  %k",
-	"(%%l)               hour, 12-hour clock, blank pad ( 0..12)  %l",
-	"(%%m)                                        month (01..12)  %m",
-	"(%%o)                                      Emperor/Era Year  %o",
-	"(%%p)              locale's AM or PM based on 12-hour clock  %p",
-	"(%%r)                   time, 12-hour (same as %%I:%%M:%%S %%p)  %r",
-	"(%%u) ISO 8601: Weekday as decimal number [1 (Monday) - 7]   %u",
-	"(%%v)                                VMS date (dd-bbb-YYYY)  %v",
-	"(%%w)                       day of week (0..6, Sunday == 0)  %w",
-	"(%%x)                appropriate locale date representation  %x",
-	"(%%y)                      last two digits of year (00..99)  %y",
-	"(%%z)      timezone offset east of GMT as HHMM (e.g. -0500)  %z",
-	(char *) NULL
-};
+static char *array[] = {"(%%A)      full weekday name, var length (Sunday..Saturday)  %A",
+                        "(%%B)       full month name, var length (January..December)  %B",
+                        "(%%C)                                               Century  %C",
+                        "(%%D)                                       date (%%m/%%d/%%y)  %D",
+                        "(%%E)                           Locale extensions (ignored)  %E",
+                        "(%%F)       full month name, var length (January..December)  %F",
+                        "(%%H)                          hour (24-hour clock, 00..23)  %H",
+                        "(%%I)                          hour (12-hour clock, 01..12)  %I",
+                        "(%%M)                                       minute (00..59)  %M",
+                        "(%%N)                                      Emperor/Era Name  %N",
+                        "(%%O)                           Locale extensions (ignored)  %O",
+                        "(%%R)                                 time, 24-hour (%%H:%%M)  %R",
+                        "(%%S)                                       second (00..60)  %S",
+                        "(%%T)                              time, 24-hour (%%H:%%M:%%S)  %T",
+                        "(%%U)    week of year, Sunday as first day of week (00..53)  %U",
+                        "(%%V)                    week of year according to ISO 8601  %V",
+                        "(%%W)    week of year, Monday as first day of week (00..53)  %W",
+                        "(%%X)     appropriate locale time representation (%H:%M:%S)  %X",
+                        "(%%Y)                           year with century (1970...)  %Y",
+                        "(%%Z) timezone (EDT), or blank if timezone not determinable  %Z",
+                        "(%%a)          locale's abbreviated weekday name (Sun..Sat)  %a",
+                        "(%%b)            locale's abbreviated month name (Jan..Dec)  %b",
+                        "(%%c)           full date (Sat Nov  4 12:02:33 1989)%n%t%t%t  %c",
+                        "(%%d)                             day of the month (01..31)  %d",
+                        "(%%e)               day of the month, blank-padded ( 1..31)  %e",
+                        "(%%h)                                should be same as (%%b)  %h",
+                        "(%%j)                            day of the year (001..366)  %j",
+                        "(%%k)               hour, 24-hour clock, blank pad ( 0..23)  %k",
+                        "(%%l)               hour, 12-hour clock, blank pad ( 0..12)  %l",
+                        "(%%m)                                        month (01..12)  %m",
+                        "(%%o)                                      Emperor/Era Year  %o",
+                        "(%%p)              locale's AM or PM based on 12-hour clock  %p",
+                        "(%%r)                   time, 12-hour (same as %%I:%%M:%%S %%p)  %r",
+                        "(%%u) ISO 8601: Weekday as decimal number [1 (Monday) - 7]   %u",
+                        "(%%v)                                VMS date (dd-bbb-YYYY)  %v",
+                        "(%%w)                       day of week (0..6, Sunday == 0)  %w",
+                        "(%%x)                appropriate locale date representation  %x",
+                        "(%%y)                      last two digits of year (00..99)  %y",
+                        "(%%z)      timezone offset east of GMT as HHMM (e.g. -0500)  %z",
+                        (char *)NULL};
 
 /* main routine. */
 
-int
-main(argc, argv)
+int main(argc, argv)
 int argc;
 char **argv;
 {
@@ -999,7 +962,7 @@ char **argv;
 
 	/* Call the function. */
 
-	clock = time((long *) 0);
+	clock = time((long *)0);
 	tm = localtime(&clock);
 
 	for (k = 0; next = array[k]; k++) {
@@ -1009,4 +972,4 @@ char **argv;
 
 	exit(0);
 }
-#endif	/* TEST_STRFTIME */
+#endif /* TEST_STRFTIME */

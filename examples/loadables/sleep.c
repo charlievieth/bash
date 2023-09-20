@@ -28,18 +28,18 @@
 
 #include "bashtypes.h"
 
-#if defined (TIME_WITH_SYS_TIME)
-#  include <sys/time.h>
-#  include <time.h>
+#if defined(TIME_WITH_SYS_TIME)
+#include <sys/time.h>
+#include <time.h>
 #else
-#  if defined (HAVE_SYS_TIME_H)
-#    include <sys/time.h>
-#  else
-#    include <time.h>
-#  endif
+#if defined(HAVE_SYS_TIME_H)
+#include <sys/time.h>
+#else
+#include <time.h>
+#endif
 #endif
 
-#if defined (HAVE_UNISTD_H)
+#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
 
@@ -48,45 +48,43 @@
 
 #include "loadables.h"
 
-#define S_SEC	1
-#define S_MIN	(60*S_SEC)
-#define S_HOUR	(60*S_MIN)
-#define S_DAY	(24*S_HOUR)
+#define S_SEC  1
+#define S_MIN  (60 * S_SEC)
+#define S_HOUR (60 * S_MIN)
+#define S_DAY  (24 * S_HOUR)
 
-static int
-parse_gnutimefmt (char *string, long *sp, long *up)
-{
-	int	c, r;
-	char	*s, *ep;
-	long	tsec, tusec, accumsec, accumusec, t;
-	int	mult;
+static int parse_gnutimefmt(char *string, long *sp, long *up) {
+	int c, r;
+	char *s, *ep;
+	long tsec, tusec, accumsec, accumusec, t;
+	int mult;
 
 	tsec = tusec = 0;
 	accumsec = accumusec = 0;
 	mult = 1;
 
 	for (s = string; s && *s; s++) {
-	    	r = uconvert(s, &accumsec, &accumusec, &ep);
+		r = uconvert(s, &accumsec, &accumusec, &ep);
 		if (r == 0 && *ep == 0)
 			return r;
 		c = *ep;
 		mult = 1;
 		switch (c) {
-			case '\0':
-			case 's':
-				mult = S_SEC;
-				break;
-			case 'm':
-				mult = S_MIN;
-				break;
-			case 'h':
-				mult = S_HOUR;
-				break;
-			case 'd':
-				mult = S_DAY;
-				break;
-			default:
-				return 0;
+		case '\0':
+		case 's':
+			mult = S_SEC;
+			break;
+		case 'm':
+			mult = S_MIN;
+			break;
+		case 'h':
+			mult = S_HOUR;
+			break;
+		case 'd':
+			mult = S_DAY;
+			break;
+		default:
+			return 0;
 		}
 
 		/* multiply the accumulated value by the multiplier */
@@ -118,29 +116,27 @@ parse_gnutimefmt (char *string, long *sp, long *up)
 	return 1;
 }
 
-int
-sleep_builtin (WORD_LIST *list)
-{
-	long	sec, usec;
-	char	*ep;
-	int	r, mul;
-	time_t	t;
+int sleep_builtin(WORD_LIST *list) {
+	long sec, usec;
+	char *ep;
+	int r, mul;
+	time_t t;
 
 	if (list == 0) {
 		builtin_usage();
-		return(EX_USAGE);
-	}
-
-	/* Skip over `--' */
-	if (list->word && ISOPTION (list->word->word, '-'))
-		list = list->next;
-
-	if (*list->word->word == '-' || list->next) {
-		builtin_usage ();
 		return (EX_USAGE);
 	}
 
-    	r = uconvert(list->word->word, &sec, &usec, &ep);
+	/* Skip over `--' */
+	if (list->word && ISOPTION(list->word->word, '-'))
+		list = list->next;
+
+	if (*list->word->word == '-' || list->next) {
+		builtin_usage();
+		return (EX_USAGE);
+	}
+
+	r = uconvert(list->word->word, &sec, &usec, &ep);
 	/*
 	 * Maybe postprocess conversion failures here based on EP
 	 *
@@ -149,31 +145,23 @@ sleep_builtin (WORD_LIST *list)
 	 * it. If we can't, return the right exit code to tell
 	 * execute_builtin to try and execute a disk command instead.
 	 */
-	if (r == 0 && (strchr ("dhms", *ep) || strpbrk (list->word->word, "dhms")))
-		r = parse_gnutimefmt (list->word->word, &sec, &usec);
-    		
+	if (r == 0 && (strchr("dhms", *ep) || strpbrk(list->word->word, "dhms")))
+		r = parse_gnutimefmt(list->word->word, &sec, &usec);
+
 	if (r) {
 		fsleep(sec, usec);
 		QUIT;
-		return(EXECUTION_SUCCESS);
+		return (EXECUTION_SUCCESS);
 	}
 	builtin_error("%s: bad sleep interval", list->word->word);
 	return (EXECUTION_FAILURE);
 }
 
 static char *sleep_doc[] = {
-	"Suspend execution for specified period.",
-	""
-	"sleep suspends execution for a minimum of SECONDS[.FRACTION] seconds.",
-	"As an extension, sleep accepts GNU-style time intervals (e.g., 2m30s).",
-	(char *)NULL
-};
+    "Suspend execution for specified period.",
+    ""
+    "sleep suspends execution for a minimum of SECONDS[.FRACTION] seconds.",
+    "As an extension, sleep accepts GNU-style time intervals (e.g., 2m30s).", (char *)NULL};
 
 struct builtin sleep_struct = {
-	"sleep",
-	sleep_builtin,
-	BUILTIN_ENABLED,
-	sleep_doc,
-	"sleep seconds[.fraction]",
-	0
-};
+    "sleep", sleep_builtin, BUILTIN_ENABLED, sleep_doc, "sleep seconds[.fraction]", 0};

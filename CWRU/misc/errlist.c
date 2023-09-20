@@ -27,12 +27,11 @@ extern char *strerror();
 
 extern int sys_nerr;
 
-int
-main(c, v)
-int	c;
-char	**v;
+int main(c, v)
+int c;
+char **v;
 {
-	int	i, n;
+	int i, n;
 
 	if (c == 1) {
 		for (i = 1; i < sys_nerr; i++)
@@ -43,15 +42,12 @@ char	**v;
 			printf("%d --> %s\n", n, strerror(n));
 		}
 	}
-	exit (0);
+	exit(0);
 }
 
-programming_error(a, b)
-char	*a;
-int	b;
-{
-}
+programming_error(a, b) char *a;
+int b;
+{}
 
-fatal_error()
-{
+fatal_error() {
 }
