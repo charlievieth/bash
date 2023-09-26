@@ -889,7 +889,8 @@ char *text;
    command being entered (if no explicit argument is given), otherwise on
    a command from the history file. */
 
-#define VI_EDIT_COMMAND       "fc -e \"${VISUAL:-${EDITOR:-vi}}\""
+// CEV: add FCEDIT back to the list of environment variables we check.
+#define VI_EDIT_COMMAND       "fc -e \"${FCEDIT:-${VISUAL:-${EDITOR:-vi}}}\""
 #define EMACS_EDIT_COMMAND    "fc -e \"${VISUAL:-${EDITOR:-emacs}}\""
 #define POSIX_VI_EDIT_COMMAND "fc -e vi"
 
